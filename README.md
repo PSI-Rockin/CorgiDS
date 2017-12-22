@@ -2,7 +2,7 @@
 A DS emulator that seeks to combine accuracy and speed. As of v0.1, it's a long way from either one, but with your support, CorgiDS will accomplish its goals.
 
 ## Compiling
-CorgiDS requires Qt and currently only supports qmake. Your best chance of compiling the project is to use Qt Creator. Feel free to report compilation errors.
+CorgiDS requires Qt and currently only supports qmake. Your best chance of compiling the project is to use Qt Creator. Please report any compilation errors or other problems that happen during this process.
 
 ## Using the Emulator
 In order to play DS games on CorgiDS, you must dump the BIOS and firmware from your DS or DS Lite. You will need three files:

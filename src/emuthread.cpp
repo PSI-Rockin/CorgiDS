@@ -131,8 +131,17 @@ void EmuThread::press_key(DS_KEYS key)
         case BUTTON_Y:
             e.button_y_pressed();
             break;
+        case BUTTON_L:
+            e.button_l_pressed();
+            break;
+        case BUTTON_R:
+            e.button_r_pressed();
+            break;
         case BUTTON_START:
             e.button_start_pressed();
+            break;
+        case BUTTON_SELECT:
+            e.button_select_pressed();
             break;
         case DEBUGGING:
             e.debug();
@@ -170,8 +179,17 @@ void EmuThread::release_key(DS_KEYS key)
         case BUTTON_Y:
             e.button_y_released();
             break;
+        case BUTTON_L:
+            e.button_l_released();
+            break;
+        case BUTTON_R:
+            e.button_r_released();
+            break;
         case BUTTON_START:
             e.button_start_released();
+            break;
+        case BUTTON_SELECT:
+            e.button_select_released();
             break;
     }
     mutex.unlock();

@@ -36,7 +36,7 @@ int EmuWindow::initialize()
     file_menu->addAction(load_ROM_act);
     file_menu->addAction(screenshot_act);
 
-    config_act = new QAction(tr("&Settings"), this);
+    config_act = new QAction(tr("&Config"), this);
     config_act->setShortcuts(QKeySequence::Preferences);
     connect(config_act, &QAction::triggered, this, &EmuWindow::preferences);
 
@@ -170,6 +170,12 @@ void EmuWindow::keyPressEvent(QKeyEvent *event)
         case Qt::Key_Right:
             emit press_key(BUTTON_RIGHT);
             break;
+        case Qt::Key_Q:
+            emit press_key(BUTTON_L);
+            break;
+        case Qt::Key_W:
+            emit press_key(BUTTON_R);
+            break;
         case Qt::Key_A:
             emit press_key(BUTTON_Y);
             break;
@@ -184,6 +190,9 @@ void EmuWindow::keyPressEvent(QKeyEvent *event)
             break;
         case Qt::Key_Return:
             emit press_key(BUTTON_START);
+            break;
+        case Qt::Key_Space:
+            emit press_key(BUTTON_SELECT);
             break;
         case Qt::Key_0:
             emit press_key(DEBUGGING);
@@ -208,6 +217,12 @@ void EmuWindow::keyReleaseEvent(QKeyEvent *event)
         case Qt::Key_Right:
             emit release_key(BUTTON_RIGHT);
             break;
+        case Qt::Key_Q:
+            emit release_key(BUTTON_L);
+            break;
+        case Qt::Key_W:
+            emit release_key(BUTTON_R);
+            break;
         case Qt::Key_A:
             emit release_key(BUTTON_Y);
             break;
@@ -222,6 +237,9 @@ void EmuWindow::keyReleaseEvent(QKeyEvent *event)
             break;
         case Qt::Key_Return:
             emit release_key(BUTTON_START);
+            break;
+        case Qt::Key_Space:
+            emit release_key(BUTTON_SELECT);
             break;
     }
 }

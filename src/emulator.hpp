@@ -199,20 +199,26 @@ class Emulator
         void button_left_pressed();
         void button_right_pressed();
         void button_start_pressed();
+        void button_select_pressed();
         void button_a_pressed();
         void button_b_pressed();
         void button_x_pressed();
         void button_y_pressed();
+        void button_l_pressed();
+        void button_r_pressed();
 
         void button_up_released();
         void button_down_released();
         void button_left_released();
         void button_right_released();
         void button_start_released();
+        void button_select_released();
         void button_a_released();
         void button_b_released();
         void button_x_released();
         void button_y_released();
+        void button_l_released();
+        void button_r_released();
 };
 
 inline void Emulator::set_upper_screen(uint32_t* buffer)
@@ -287,9 +293,24 @@ void inline Emulator::button_y_pressed()
     EXTKEYIN.button_Y = true;
 }
 
+void inline Emulator::button_l_pressed()
+{
+    KEYINPUT.button_L = true;
+}
+
+void inline Emulator::button_r_pressed()
+{
+    KEYINPUT.button_R = true;
+}
+
 void inline Emulator::button_start_pressed()
 {
     KEYINPUT.start = true;
+}
+
+void inline Emulator::button_select_pressed()
+{
+    KEYINPUT.select = true;
 }
 
 void inline Emulator::button_up_released()
@@ -332,9 +353,24 @@ void inline Emulator::button_y_released()
     EXTKEYIN.button_Y = false;
 }
 
+void inline Emulator::button_l_released()
+{
+    KEYINPUT.button_L = false;
+}
+
+void inline Emulator::button_r_released()
+{
+    KEYINPUT.button_R = false;
+}
+
 void inline Emulator::button_start_released()
 {
     KEYINPUT.start = false;
+}
+
+void inline Emulator::button_select_released()
+{
+    KEYINPUT.select = false;
 }
 
 #endif /* emulator_hpp */
