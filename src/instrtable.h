@@ -1,0 +1,77 @@
+/*
+    CorgiDS Copyright PSISP 2017
+    Licensed under the GPLv3
+    See LICENSE.txt for details
+*/
+
+#ifndef instrtable_h
+#define instrtable_h
+
+enum class ARM_INSTR
+{
+    UNDEFINED,
+    DATA_PROCESSING,
+    COUNT_LEADING_ZEROS,
+    SATURATED_OP, //QADD, etc
+    MULTIPLY,
+    MULTIPLY_LONG,
+    SIGNED_HALFWORD_MULTIPLY,
+    SWAP,
+    BRANCH,
+    BRANCH_WITH_LINK,
+    BRANCH_EXCHANGE,
+    BRANCH_LINK_EXCHANGE,
+    STORE_HALFWORD,
+    LOAD_HALFWORD,
+    LOAD_DOUBLEWORD,
+    LOAD_SIGNED_BYTE,
+    STORE_DOUBLEWORD,
+    LOAD_SIGNED_HALFWORD,
+    STORE_WORD,
+    LOAD_WORD,
+    STORE_BYTE,
+    LOAD_BYTE,
+    STORE_BLOCK,
+    LOAD_BLOCK,
+    COP_REG_TRANSFER,
+    COP_DATA_OP,
+    SWI
+};
+
+enum class THUMB_INSTR
+{
+    UNDEFINED,
+    MOV_SHIFT,
+    ADD_REG,
+    SUB_REG,
+    MOV_IMM,
+    CMP_IMM,
+    ADD_IMM,
+    SUB_IMM,
+    ALU_OP,
+    HI_REG_OP,
+    PC_REL_LOAD,
+    STORE_REG_OFFSET,
+    LOAD_REG_OFFSET,
+    LOAD_STORE_SIGN_HALFWORD,
+    STORE_HALFWORD,
+    LOAD_HALFWORD,
+    STORE_IMM_OFFSET,
+    LOAD_IMM_OFFSET,
+    SP_REL_STORE,
+    SP_REL_LOAD,
+    OFFSET_SP,
+    LOAD_ADDRESS,
+    POP,
+    PUSH,
+    STORE_MULTIPLE,
+    LOAD_MULTIPLE,
+    BRANCH,
+    COND_BRANCH,
+    LONG_BRANCH_PREP,
+    LONG_BRANCH,
+    LONG_BLX,
+    SWI
+};
+
+#endif /* instrtable_h */
