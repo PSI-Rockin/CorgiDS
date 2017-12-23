@@ -22,7 +22,6 @@ class EmuWindow : public QMainWindow
     Q_OBJECT
     private:
         EmuThread emuthread;
-        QPixmap test2;
 
         ConfigWindow* cfg;
 
@@ -36,15 +35,8 @@ class EmuWindow : public QMainWindow
 
         QMenu* help_menu;
         QAction* about_act;
-        QLabel* upper_screen_label;
-        QLabel* lower_screen_label;
-
-        bool running;
-        bool emulating;
-        bool paused;
-        bool out_of_focus;
-        bool frame_finished;
-        bool mouse_pressed;
+        //QLabel* upper_screen_label;
+        //QLabel* lower_screen_label;
     public:
         explicit EmuWindow(QWidget *parent = nullptr);
         int initialize();
@@ -75,25 +67,5 @@ class EmuWindow : public QMainWindow
         void preferences();
         void screenshot();
 };
-
-inline bool EmuWindow::is_running()
-{
-    return running;
-}
-
-inline bool EmuWindow::is_emulating()
-{
-    return emulating && !(Config::pause_when_unfocused && out_of_focus) && !paused;
-}
-
-inline bool EmuWindow::finished_frame()
-{
-    if (frame_finished)
-    {
-        frame_finished = false;
-        return true;
-    }
-    return false;
-}
 
 #endif // EMUWINDOW_HPP
