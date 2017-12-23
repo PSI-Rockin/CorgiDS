@@ -17,7 +17,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>180</y>
+     <y>170</y>
      <width>291</width>
      <height>20</height>
     </rect>
@@ -32,14 +32,14 @@
      <x>10</x>
      <y>0</y>
      <width>341</width>
-     <height>178</height>
+     <height>161</height>
     </rect>
    </property>
    <layout class="QGridLayout" name="gridLayout">
     <item row="1" column="0">
      <widget class="QLabel" name="label_2">
       <property name="text">
-       <string>ARM9 BIOS file:</string>
+       <string>ARM7 BIOS file:</string>
       </property>
      </widget>
     </item>
@@ -63,7 +63,7 @@
     <item row="2" column="0">
      <widget class="QLabel" name="label">
       <property name="text">
-       <string>ARM7 BIOS file:</string>
+       <string>ARM9 BIOS file:</string>
       </property>
      </widget>
     </item>

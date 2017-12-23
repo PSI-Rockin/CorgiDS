@@ -108,8 +108,8 @@ void NDS_Cart::init_keycode(uint32_t idcode, int level, uint32_t modulo)
 
 void NDS_Cart::power_on()
 {
-    flash_save = false;
-    save_size = 1024 * 8;
+    flash_save = true;
+    save_size = 1024 * 1024;
     cycles_left = 8;
     bytes_left = 0;
     ROMCTRL.word_ready = true;

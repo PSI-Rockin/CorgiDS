@@ -55,9 +55,14 @@ void EmuThread::run()
     {
         emu_mutex.lock();
         if (abort)
+        {
+            emu_mutex.unlock();
             return;
+        }
         if (pause_status)
+        {
             usleep(1000); //TODO: better way to handle pause than sleeping?
+        }
         else
         {
             auto last_update = chrono::system_clock::now();

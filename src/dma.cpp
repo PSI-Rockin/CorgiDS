@@ -216,7 +216,7 @@ void NDS_DMA::write_CNT(int index, uint16_t CNT)
         dmas[index].internal_source = dmas[index].source;
         dmas[index].internal_dest = dmas[index].destination;
         dmas[index].internal_len = 0;
-        if (dmas[index].CNT.timing)
+        /*if (dmas[index].CNT.timing)
         {
             printf("\nDMA%d activated", index);
             printf("\nSource: $%08X", dmas[index].source);
@@ -227,7 +227,7 @@ void NDS_DMA::write_CNT(int index, uint16_t CNT)
         }
 
         if (dmas[index].destination < 0x02000000 || dmas[index].source < 0x02000000 || dmas[index].destination > 0x08000000)
-            printf("\nWarning! DMA writing to unmapped memory");
+            printf("\nWarning! DMA writing to unmapped memory");*/
         
         if (dmas[index].CNT.timing == 0)
         {
