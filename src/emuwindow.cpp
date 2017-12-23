@@ -80,8 +80,8 @@ int EmuWindow::initialize()
 
 void EmuWindow::draw_frame(uint32_t* upper_buffer, uint32_t* lower_buffer)
 {
-    QImage upper((uint8_t*)upper_buffer, PIXELS_PER_LINE, SCANLINES, QImage::Format_ARGB32);
-    QImage lower((uint8_t*)lower_buffer, PIXELS_PER_LINE, SCANLINES, QImage::Format_ARGB32);
+    QImage upper((uint8_t*)upper_buffer, PIXELS_PER_LINE, SCANLINES, QImage::Format_RGB32);
+    QImage lower((uint8_t*)lower_buffer, PIXELS_PER_LINE, SCANLINES, QImage::Format_RGB32);
 
     upper_pixmap = QPixmap::fromImage(upper);
     lower_pixmap = QPixmap::fromImage(lower);
