@@ -12,6 +12,7 @@
 #include <QMainWindow>
 #include <QMouseEvent>
 #include <QLabel>
+#include <QPaintEvent>
 #include "config.hpp"
 #include "configwindow.hpp"
 #include "emulator.hpp"
@@ -35,8 +36,7 @@ class EmuWindow : public QMainWindow
 
         QMenu* help_menu;
         QAction* about_act;
-        //QLabel* upper_screen_label;
-        //QLabel* lower_screen_label;
+        QPixmap upper_pixmap, lower_pixmap;
     public:
         explicit EmuWindow(QWidget *parent = nullptr);
         int initialize();
@@ -48,9 +48,10 @@ class EmuWindow : public QMainWindow
         bool is_emulating();
         bool finished_frame();
 
-        /*void mouseMoveEvent(QMouseEvent* event);
+        void mouseMoveEvent(QMouseEvent* event);
         void mousePressEvent(QMouseEvent* event);
-        void mouseReleaseEvent(QMouseEvent* event);*/
+        void mouseReleaseEvent(QMouseEvent* event);
+        void paintEvent(QPaintEvent *event);
         void keyPressEvent(QKeyEvent* event);
         void keyReleaseEvent(QKeyEvent* event);
     signals:

@@ -9,6 +9,7 @@
 #include <QFileDialog>
 #include <QMenuBar>
 #include <QMessageBox>
+#include <QPainter>
 #include "config.hpp"
 #include "emuwindow.hpp"
 
@@ -62,7 +63,7 @@ int EmuWindow::initialize()
     connect(this, SIGNAL(release_key(DS_KEYS)), &emuthread, SLOT(release_key(DS_KEYS)));
     connect(this, SIGNAL(touchscreen_event(int,int)), &emuthread, SLOT(touchscreen_event(int,int)));
     emuthread.pause(PAUSE_EVENT::GAME_NOT_STARTED);
-    //emuthread.start();
+    emuthread.start();
 
     cfg = new ConfigWindow(0);
     /*upper_screen_label = new QLabel(this);
@@ -79,14 +80,24 @@ int EmuWindow::initialize()
 
 void EmuWindow::draw_frame(uint32_t* upper_buffer, uint32_t* lower_buffer)
 {
-    /*QImage upper1((uint8_t*)upper_buffer, PIXELS_PER_LINE, SCANLINES, QImage::Format_ARGB32);
-    QPixmap upper2(PIXELS_PER_LINE, SCANLINES);
-    QImage lower1((uint8_t*)lower_buffer, PIXELS_PER_LINE, SCANLINES, QImage::Format_ARGB32);
-    QPixmap lower2(PIXELS_PER_LINE, SCANLINES);
-    upper2.convertFromImage(upper1);
-    lower2.convertFromImage(lower1);
-    upper_screen_label->setPixmap(upper2);
-    lower_screen_label->setPixmap(lower2);*/
+    QImage upper((uint8_t*)upper_buffer, PIXELS_PER_LINE, SCANLINES, QImage::Format_ARGB32);
+    QImage lower((uint8_t*)lower_buffer, PIXELS_PER_LINE, SCANLINES, QImage::Format_ARGB32);
+
+    upper_pixmap = QPixmap::fromImage(upper);
+    lower_pixmap = QPixmap::fromImage(lower);
+    update();
+}
+
+void EmuWindow::paintEvent(QPaintEvent *event)
+{
+    QPainter painter(this);
+    painter.fillRect(rect(), Qt::black);
+
+    if (upper_pixmap.isNull() || lower_pixmap.isNull())
+        return;
+
+    painter.drawPixmap(0, 0, upper_pixmap);
+    painter.drawPixmap(0, SCANLINES, lower_pixmap);
 }
 
 void EmuWindow::update_FPS(int FPS)
@@ -111,7 +122,7 @@ void EmuWindow::focusInEvent(QFocusEvent *event)
 {
     event->accept();
     out_of_focus = false;
-}
+}*/
 
 void EmuWindow::mouseMoveEvent(QMouseEvent *event)
 {
@@ -141,7 +152,7 @@ void EmuWindow::mouseReleaseEvent(QMouseEvent *event)
 {
     event->accept();
     emit touchscreen_event(0, 0xFFF);
-}*/
+}
 
 void EmuWindow::keyPressEvent(QKeyEvent *event)
 {
