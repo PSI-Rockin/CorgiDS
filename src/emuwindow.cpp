@@ -62,7 +62,7 @@ int EmuWindow::initialize()
     connect(this, SIGNAL(release_key(DS_KEYS)), &emuthread, SLOT(release_key(DS_KEYS)));
     connect(this, SIGNAL(touchscreen_event(int,int)), &emuthread, SLOT(touchscreen_event(int,int)));
     emuthread.pause(PAUSE_EVENT::GAME_NOT_STARTED);
-    emuthread.start();
+    //emuthread.start();
 
     cfg = new ConfigWindow(0);
     upper_screen_label = new QLabel(this);
@@ -108,7 +108,7 @@ void EmuWindow::closeEvent(QCloseEvent *event)
 }
 
 //TODO: add configurable option to pause emulation when out-of-focus
-void EmuWindow::focusOutEvent(QFocusEvent *event)
+/*void EmuWindow::focusOutEvent(QFocusEvent *event)
 {
     event->accept();
     out_of_focus = true;
@@ -148,7 +148,7 @@ void EmuWindow::mouseReleaseEvent(QMouseEvent *event)
 {
     event->accept();
     emit touchscreen_event(0, 0xFFF);
-}
+}*/
 
 void EmuWindow::keyPressEvent(QKeyEvent *event)
 {

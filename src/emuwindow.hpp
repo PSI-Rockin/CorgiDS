@@ -49,16 +49,16 @@ class EmuWindow : public QMainWindow
         explicit EmuWindow(QWidget *parent = nullptr);
         int initialize();
         void closeEvent(QCloseEvent* event);
-        void focusOutEvent(QFocusEvent* event);
-        void focusInEvent(QFocusEvent* event);
+        /*void focusOutEvent(QFocusEvent* event);
+        void focusInEvent(QFocusEvent* event);*/
 
         bool is_running();
         bool is_emulating();
         bool finished_frame();
 
-        void mouseMoveEvent(QMouseEvent* event);
+        /*void mouseMoveEvent(QMouseEvent* event);
         void mousePressEvent(QMouseEvent* event);
-        void mouseReleaseEvent(QMouseEvent* event);
+        void mouseReleaseEvent(QMouseEvent* event);*/
         void keyPressEvent(QKeyEvent* event);
         void keyReleaseEvent(QKeyEvent* event);
     signals:
