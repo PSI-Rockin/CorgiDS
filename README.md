@@ -14,7 +14,7 @@ In order to play DS games on CorgiDS, you must dump the BIOS and firmware from y
 
 The names of these files do not matter as long as they match the given sizes. Load these files by going to Emulation -> Config or Preferences (on Mac OS X) on the menubar. From the same config window, you can also choose to either boot from the firmware or boot a game directly.
 
-High-level BIOS emulation is in the works but currently remains in an unusable state for games. Once this is implemented, 
+High-level BIOS emulation is in the works but currently remains in an unusable state for games. Once this is implemented, having the above files will be optional.
 
 ### Saving
 BACK UP YOUR SAVEFILES BEFORE USING CORGIDS
