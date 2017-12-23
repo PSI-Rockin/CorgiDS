@@ -1274,7 +1274,7 @@ void GPU_3D::exec_command()
                 break;
             default:
                 printf("\nUnrecognized GXFIFO command $%02X", cmd.command);
-                exit(1);
+                //exit(1);
         }
         cmd_param_count = 0;
     }
@@ -1935,6 +1935,11 @@ uint16_t GPU_3D::get_poly_count()
     return geo_poly_count;
 }
 
+uint16_t GPU_3D::read_vec_test(uint32_t address)
+{
+    return vec_test_result[(address - 0x04000630) / 2];
+}
+
 uint32_t GPU_3D::read_clip_mtx(uint32_t address)
 {
     update_clip_mtx();
@@ -1989,7 +1994,7 @@ void GPU_3D::set_MTX_MODE(uint32_t word)
 
 void GPU_3D::MTX_PUSH()
 {
-    printf("\nMTX_PUSH");
+    //printf("\nMTX_PUSH");
     switch (MTX_MODE)
     {
         case 0:
@@ -1997,7 +2002,7 @@ void GPU_3D::MTX_PUSH()
             break;
         case 1:
         case 2:
-            printf("\nModelview SP: $%02X", modelview_sp);
+            //printf("\nModelview SP: $%02X", modelview_sp);
             if (modelview_sp < 0x1F)
             {
                 modelview_stack[modelview_sp].set(modelview_mtx);
@@ -2376,7 +2381,18 @@ void GPU_3D::BOX_TEST()
 void GPU_3D::VEC_TEST()
 {
     //printf("\nVEC_TEST");
+    int16_t bark[3];
+    bark[0] = (int16_t)((cmd_params[0] & 0x3FF) << 6) >> 6;
+    bark[1] = (int16_t)(((cmd_params[0] >> 9) & 0x3FF) << 6) >> 6;
+    bark[2] = (int16_t)(((cmd_params[0] >> 18) & 0x3FF) << 6) >> 6;
 
+    vec_test_result[0] = (bark[0] * vector_mtx.m[0][0] + bark[1] * vector_mtx.m[1][0] + bark[2] * vector_mtx.m[2][0]) >> 9;
+    vec_test_result[1] = (bark[0] * vector_mtx.m[0][1] + bark[1] * vector_mtx.m[1][1] + bark[2] * vector_mtx.m[2][1]) >> 9;
+    vec_test_result[2] = (bark[0] * vector_mtx.m[0][2] + bark[1] * vector_mtx.m[1][2] + bark[2] * vector_mtx.m[2][2]) >> 9;
+
+    vec_test_result[0] |= (vec_test_result[0] & 0x1000) * 0xF;
+    vec_test_result[1] |= (vec_test_result[1] & 0x1000) * 0xF;
+    vec_test_result[2] |= (vec_test_result[2] & 0x1000) * 0xF;
 }
 
 void GPU_3D::set_GXSTAT(uint32_t word)

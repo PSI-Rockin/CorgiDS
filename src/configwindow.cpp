@@ -18,12 +18,14 @@ ConfigWindow::ConfigWindow(QWidget *parent) :
     ui->arm7_BIOS_name->setReadOnly(true);
     ui->arm9_BIOS_name->setReadOnly(true);
     ui->firmware_name->setReadOnly(true);
+    ui->savelist_name->setReadOnly(true);
 
     setWindowTitle("Emulator Configuration");
 
     Config::arm7_bios_path = cfg.value("boot/bios7path").toString().toStdString();
     Config::arm9_bios_path = cfg.value("boot/bios9path").toString().toStdString();
     Config::firmware_path = cfg.value("boot/firmwarepath").toString().toStdString();
+    Config::savelist_path = cfg.value("saves/savelistpath").toString().toStdString();
 
     Config::direct_boot_enabled = cfg.value("boot/directboot").toBool();
     ui->toggle_direct_boot->setChecked(Config::direct_boot_enabled);
@@ -79,5 +81,16 @@ void ConfigWindow::update_ui()
     QString firm_path(Config::firmware_path.c_str());
     ui->firmware_name->setText(QFileInfo(firm_path).fileName());
 
+    QString save_path(Config::savelist_path.c_str());
+    ui->savelist_name->setText(QFileInfo(save_path).fileName());
+
     ui->toggle_direct_boot->setChecked(Config::direct_boot_enabled);
+}
+
+void ConfigWindow::on_find_savelist_clicked()
+{
+    QString path = QFileDialog::getOpenFileName(this, tr("Load savelist database"), "", "Savelist (*.bin)");
+    Config::savelist_path = path.toStdString();
+    cfg.setValue("saves/savelistpath", path);
+    update_ui();
 }

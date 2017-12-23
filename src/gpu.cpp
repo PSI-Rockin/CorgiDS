@@ -140,8 +140,10 @@ void GPU::draw_3D_scanline(uint32_t* framebuffer, uint8_t bg_priorities[256], ui
 
 void GPU::draw_scanline()
 {
-    if (!POWCNT1.lcd_enable)
+    /*if (!POWCNT1.lcd_enable)
+    {
         return;
+    }*/
     if (POWCNT1.engine_a)
         eng_A.draw_scanline();
     if (POWCNT1.engine_b)
@@ -630,6 +632,11 @@ uint16_t GPU::get_poly_count()
     return eng_3D.get_poly_count();
 }
 
+uint16_t GPU::read_vec_test(uint32_t address)
+{
+    return eng_3D.read_vec_test(address);
+}
+
 uint32_t GPU::read_clip_mtx(uint32_t address)
 {
     return eng_3D.read_clip_mtx(address);
@@ -685,13 +692,11 @@ void GPU::set_DISPSTAT9(uint16_t halfword)
 void GPU::set_BGCNT_A(uint16_t halfword, int index)
 {
     eng_A.set_BGCNT(halfword, index);
-    printf("\nBGACNT_%d: $%04X", index, halfword);
 }
 
 void GPU::set_BGCNT_B(uint16_t halfword, int index)
 {
     eng_B.set_BGCNT(halfword, index);
-    printf("\nBGBCNT_%d: $%04X", index, halfword);
 }
 
 void GPU::set_BGHOFS_A(uint16_t halfword, int index)
@@ -826,13 +831,11 @@ void GPU::set_WININ_B(uint16_t halfword)
 
 void GPU::set_WINOUT_A(uint16_t halfword)
 {
-    printf("\nSet WINOUT_A: $%04X", halfword);
     eng_A.set_WINOUT(halfword);
 }
 
 void GPU::set_WINOUT_B(uint16_t halfword)
 {
-    printf("\nSet WINOUT_B: $%04X", halfword);
     eng_B.set_WINOUT(halfword);
 }
 

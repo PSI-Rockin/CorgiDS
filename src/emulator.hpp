@@ -137,6 +137,7 @@ class Emulator
         void load_bios7(uint8_t* bios);
         void load_bios9(uint8_t* bios);
         void load_firmware(uint8_t* firmware);
+        void load_save_database(std::string name);
         int load_ROM(std::string ROM_name);
 
         void power_on();

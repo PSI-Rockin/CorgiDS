@@ -206,11 +206,6 @@ uint8_t CP15::read_byte(uint32_t address)
 
 void CP15::write_word(uint32_t address, uint32_t word)
 {
-    if (address == 0x27C3A84)
-    {
-        printf("\nWrite to derp!");
-        arm9->print_info();
-    }
     if (address < itcm_size)
     {
         *(uint32_t*)&ITCM[address & ITCM_MASK] = word;

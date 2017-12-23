@@ -13,6 +13,7 @@ namespace Config
     extern std::string arm7_bios_path;
     extern std::string arm9_bios_path;
     extern std::string firmware_path;
+    extern std::string savelist_path;
     extern bool direct_boot_enabled;
     extern bool pause_when_unfocused;
 

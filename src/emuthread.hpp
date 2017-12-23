@@ -40,7 +40,7 @@ class EmuThread : public QThread
     Q_OBJECT
     private:
         Emulator e;
-        QMutex mutex;
+        QMutex load_mutex, pause_mutex, key_mutex, screen_mutex;
         int pause_status;
         bool abort;
         uint32_t upper_buffer[PIXELS_PER_LINE * SCANLINES], lower_buffer[PIXELS_PER_LINE * SCANLINES];
@@ -48,6 +48,7 @@ class EmuThread : public QThread
         explicit EmuThread(QObject* parent = 0);
         int init();
         int load_firmware();
+        void load_save_database();
         int load_game(QString ROM_file);
     protected:
         void run() override;
@@ -56,6 +57,7 @@ class EmuThread : public QThread
         void update_FPS(int FPS);
     public slots:
         void shutdown();
+        void manual_pause();
         void pause(PAUSE_EVENT event);
         void unpause(PAUSE_EVENT event);
         void press_key(DS_KEYS key);

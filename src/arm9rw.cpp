@@ -130,7 +130,7 @@ uint32_t Emulator::arm9_read_word(uint32_t address)
         return gpu.read_OAM<uint32_t>(address);
     if (address >= GBA_ROM_START)
         return 0xFFFFFFFF;
-    printf("\nUnrecognized word read from $%08X\n", address);
+    printf("\n(9) Unrecognized word read from $%08X", address);
     //exit(1);
     return 0;
 }
@@ -262,10 +262,7 @@ uint16_t Emulator::arm9_read_halfword(uint32_t address)
             return gpu.get_MASTER_BRIGHT_B();
     }
     if (address >= 0x04000630 && address < 0x04000636)
-    {
-        //TODO: VEC_RESULT
-        return 0;
-    }
+        return gpu.read_vec_test(address);
     if (address >= VRAM_BGA_START && address < VRAM_BGB_START)
         return gpu.read_bga<uint16_t>(address);
     if (address >= VRAM_BGB_START && address < VRAM_OBJA_START)
@@ -273,7 +270,7 @@ uint16_t Emulator::arm9_read_halfword(uint32_t address)
 
     if (address >= GBA_ROM_START)
         return 0xFFFF;
-    printf("\nUnrecognized halfword read from $%08X\n", address);
+    printf("\n(9) Unrecognized halfword read from $%08X", address);
     return 0;
     //exit(1);
 }
@@ -325,7 +322,7 @@ uint8_t Emulator::arm9_read_byte(uint32_t address)
         return gpu.read_OAM<uint8_t>(address);
     if (address >= GBA_ROM_START)
         return 0xFF;
-    printf("\nUnrecognized byte read from $%08X\n", address);
+    printf("\n(9) Unrecognized byte read from $%08X", address);
     exit(1);
 }
 
@@ -758,7 +755,7 @@ void Emulator::arm9_write_word(uint32_t address, uint32_t word)
         gpu.write_OAM(address + 2, word >> 16);
         return;
     }
-    printf("\nUnrecognized word write of $%08X to $%08X", word, address);
+    printf("\n(9) Unrecognized word write of $%08X to $%08X", word, address);
     //exit(1);
 }
 
@@ -1136,7 +1133,7 @@ void Emulator::arm9_write_halfword(uint32_t address, uint16_t halfword)
     {
         return;
     }
-    printf("\nUnrecognized halfword write of $%04X to $%08X", halfword, address);
+    printf("\n(9) Unrecognized halfword write of $%04X to $%08X", halfword, address);
     //exit(1);
 }
 
@@ -1214,7 +1211,8 @@ void Emulator::arm9_write_byte(uint32_t address, uint8_t byte)
     if (address >= PALETTE_START && address < GBA_ROM_START)
     {
         printf("\nWarning: 8-bit write to VRAM $%08X", address);
+        return;
     }
-    printf("\nUnrecognized byte write of $%02X to $%08X", byte, address);
+    printf("\n(9) Unrecognized byte write of $%02X to $%08X", byte, address);
     //exit(1);
 }

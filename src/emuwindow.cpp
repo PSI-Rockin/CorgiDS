@@ -158,6 +158,12 @@ void EmuWindow::keyPressEvent(QKeyEvent *event)
         case Qt::Key_Tab:
             Config::enable_framelimiter = !Config::enable_framelimiter;
             break;
+        case Qt::Key_O:
+            Config::frameskip = !Config::frameskip;
+            break;
+        case Qt::Key_P:
+            emuthread.manual_pause();
+            break;
         case Qt::Key_Up:
             emit press_key(BUTTON_UP);
             break;
@@ -254,6 +260,7 @@ void EmuWindow::load_ROM()
         emuthread.unpause(PAUSE_EVENT::LOADING_ROM);
         return;
     }
+    emuthread.load_save_database();
     ROM_file_name = QFileDialog::getOpenFileName(this, tr("Load NDS ROM"), ROM_file_name, "NDS ROMs (*.nds)");
     if (ROM_file_name.length())
     {

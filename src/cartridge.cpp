@@ -108,8 +108,8 @@ void NDS_Cart::init_keycode(uint32_t idcode, int level, uint32_t modulo)
 
 void NDS_Cart::power_on()
 {
-    flash_save = true;
-    save_size = 1024 * 512;
+    flash_save = false;
+    save_size = 1024 * 8;
     cycles_left = 8;
     bytes_left = 0;
     ROMCTRL.word_ready = true;
@@ -132,6 +132,33 @@ void NDS_Cart::power_on()
     spi_cmd = AUXSPI_COMMAND::EMPTY;
     spi_data = 0;
     spi_params = 0;
+}
+
+int NDS_Cart::load_database(string file_name)
+{
+    save_database = nullptr;
+    database_size = 0;
+    ifstream file(file_name, ios::binary | ios::in);
+    if (!file.is_open())
+    {
+        printf("Failed to load %s\n", file_name.c_str());
+        return 1;
+    }
+
+    database_size = get_file_size(file_name);
+    if (database_size % 19)
+    {
+        printf("Save database corrupted or in wrong format\n");
+        return 1;
+    }
+
+    printf("Save database successfully loaded.\n");
+
+    save_database = unique_ptr<uint8_t[]>(new uint8_t[database_size]);
+    file.read((char*)save_database.get(), database_size);
+    file.close();
+
+    return 0;
 }
 
 int NDS_Cart::load_ROM(string file_name)
@@ -170,15 +197,61 @@ int NDS_Cart::load_ROM(string file_name)
         {
             save_file.read((char*)SPI_save, file_size);
             save_size = file_size;
-            flash_save = save_size > (1024 * 64);
+            printf("Loaded save for %s successfully.\n", ROM_name.c_str());
+            printf("Save size: %d\n", save_size);
         }
         save_file.close();
     }
+    else
+    {
+        //Check database for possible entry
+        if (save_database)
+        {
+            bool match;
+            for (int index = 0; index < database_size / 19; index++)
+            {
+                //Check if NDS header and database entry match
+                match = true;
+                for (int c = 0; c < 16; c++)
+                {
+                    if (ROM[c] != save_database[c + (index * 19)])
+                    {
+                        match = false;
+                        break;
+                    }
+                }
+                if (match)
+                {
+                    printf("\nFound ROM entry in database.\n");
+                    int size_index = save_database[18 + (index * 19)];
+                    switch (size_index)
+                    {
+                        case 0x03:
+                            save_size = 1024 * 8;
+                            break;
+                        case 0x04:
+                            save_size = 1024 * 64;
+                            break;
+                        case 0x05:
+                            save_size = 1024 * 256;
+                            break;
+                        case 0x06:
+                            save_size = 1024 * 512;
+                            break;
+                        case 0x07:
+                            save_size = 1024 * 1024;
+                            break;
+                        default:
+                            printf("Unrecognized save format %d!\n", size_index);
+                            break;
+                    }
+                    printf("Save size: %d\n", save_size);
+                }
+            }
+        }
+    }
 
-    uint32_t checksum = 0;
-    for (int i = 0; i < 16; i++)
-        checksum += ROM[i];
-    printf("Checksum: $%08X\n", checksum);
+    flash_save = save_size > (1024 * 64);
 
     //Only re-encrypt the ROM if this is not a direct boot
     if (Config::direct_boot_enabled)

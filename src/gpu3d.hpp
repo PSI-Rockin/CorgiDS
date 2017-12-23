@@ -70,7 +70,6 @@ struct GXSTAT_REG
     int GXFIFO_irq_stat;
 };
 
-//Matrices are 64-bit in order to easily handle multiplication operations
 struct MTX
 {
     int32_t m[4][4];
@@ -228,6 +227,7 @@ class GPU_3D
         uint16_t get_poly_count();
         uint32_t read_clip_mtx(uint32_t address);
         uint32_t read_vec_mtx(uint32_t address);
+        uint16_t read_vec_test(uint32_t address);
 
         void set_DISP3DCNT(uint16_t halfword);
 

@@ -22,17 +22,24 @@ int EmuThread::init()
 
 int EmuThread::load_firmware()
 {
-    mutex.lock();
+    load_mutex.lock();
     int error = e.load_firmware();
-    mutex.unlock();
+    load_mutex.unlock();
     return error;
+}
+
+void EmuThread::load_save_database()
+{
+    load_mutex.lock();
+    e.load_save_database(Config::savelist_path);
+    load_mutex.unlock();
 }
 
 int EmuThread::load_game(QString ROM_name)
 {
-    mutex.lock();
+    load_mutex.lock();
     int error = e.load_ROM(ROM_name.toStdString());
-    mutex.unlock();
+    load_mutex.unlock();
     return error;
 }
 
@@ -46,19 +53,22 @@ void EmuThread::run()
     auto FPS_update = chrono::system_clock::now();
     forever
     {
+        emu_mutex.lock();
         if (abort)
             return;
         if (pause_status)
             usleep(1000); //TODO: better way to handle pause than sleeping?
         else
         {
-            emu_mutex.lock();
             auto last_update = chrono::system_clock::now();
             e.run();
             frames++;
             e.get_upper_frame(upper_buffer);
             e.get_lower_frame(lower_buffer);
             emit finished_frame(upper_buffer, lower_buffer);
+
+            //If the game's too fast, sleep the thread
+            //TODO: the FPS is always a little below 60... find a way to make this more efficient?
             auto now = chrono::system_clock::now();
             std::chrono::duration<float> diff = now - last_update;
             auto us = chrono::duration_cast<chrono::microseconds>(diff).count();
@@ -66,8 +76,6 @@ void EmuThread::run()
             {
                 this->usleep(max_us_count - us);
             }
-            emu_mutex.unlock();
-
             diff = now - FPS_update;
             us = chrono::duration_cast<chrono::microseconds>(diff).count();
             if (us >= second_count)
@@ -77,34 +85,46 @@ void EmuThread::run()
                 frames = 0;
             }
         }
+        emu_mutex.unlock();
     }
 }
 
 void EmuThread::shutdown()
 {
-    mutex.lock();
+    load_mutex.lock();
     abort = true;
-    mutex.unlock();
+    load_mutex.unlock();
+}
+
+void EmuThread::manual_pause()
+{
+    pause_mutex.lock();
+    int bit = 1 << MANUAL;
+    if (pause_status & bit)
+        pause_status &= ~bit;
+    else
+        pause_status |= bit;
+    pause_mutex.unlock();
 }
 
 void EmuThread::pause(PAUSE_EVENT event)
 {
-    mutex.lock();
+    pause_mutex.lock();
     pause_status |= 1 << event;
-    mutex.unlock();
+    pause_mutex.unlock();
 }
 
 void EmuThread::unpause(PAUSE_EVENT event)
 {
-    mutex.lock();
+    pause_mutex.lock();
     pause_status &= ~(1 << event);
-    mutex.unlock();
+    pause_mutex.unlock();
 }
 
 //Unsure if mutexes here are necessary
 void EmuThread::press_key(DS_KEYS key)
 {
-    mutex.lock();
+    key_mutex.lock();
     switch (key)
     {
         case BUTTON_LEFT:
@@ -147,12 +167,12 @@ void EmuThread::press_key(DS_KEYS key)
             e.debug();
             break;
     }
-    mutex.unlock();
+    key_mutex.unlock();
 }
 
 void EmuThread::release_key(DS_KEYS key)
 {
-    mutex.lock();
+    key_mutex.lock();
     switch (key)
     {
         case BUTTON_LEFT:
@@ -192,12 +212,12 @@ void EmuThread::release_key(DS_KEYS key)
             e.button_select_released();
             break;
     }
-    mutex.unlock();
+    key_mutex.unlock();
 }
 
 void EmuThread::touchscreen_event(int x, int y)
 {
-    mutex.lock();
+    screen_mutex.lock();
     e.touchscreen_press(x, y);
-    mutex.unlock();
+    screen_mutex.unlock();
 }

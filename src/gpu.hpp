@@ -189,6 +189,7 @@ class GPU
         uint32_t get_GXSTAT();
         uint16_t get_vert_count();
         uint16_t get_poly_count();
+        uint16_t read_vec_test(uint32_t address);
         uint32_t read_clip_mtx(uint32_t address);
         uint32_t read_vec_mtx(uint32_t address);
 

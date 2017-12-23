@@ -146,6 +146,11 @@ void Emulator::power_on()
         direct_boot();
 }
 
+void Emulator::load_save_database(std::string name)
+{
+    cart.load_database(name);
+}
+
 int Emulator::load_ROM(string ROM_file_name)
 {
     if (cart.load_ROM(ROM_file_name))

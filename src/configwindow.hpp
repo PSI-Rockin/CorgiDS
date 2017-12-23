@@ -31,6 +31,8 @@ class ConfigWindow : public QWidget
 
         void on_find_firmware_clicked();
 
+        void on_find_savelist_clicked();
+
 private:
         QSettings cfg;
         Ui::ConfigWindow *ui;

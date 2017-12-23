@@ -77,8 +77,9 @@ uint32_t Emulator::arm7_read_word(uint32_t address)
         return gpu.read_ARM7<uint32_t>(address);
     if (address >= GBA_ROM_START)
         return 0xFFFFFFFF;
-    printf("\nUnrecognized word read from $%08X", address);
-    exit(2);
+    printf("\n(7) Unrecognized word read from $%08X", address);
+    //exit(2);
+    return 0;
 }
 
 uint16_t Emulator::arm7_read_halfword(uint32_t address)
@@ -192,8 +193,9 @@ uint16_t Emulator::arm7_read_halfword(uint32_t address)
         return gpu.read_ARM7<uint16_t>(address);
     if (address >= GBA_ROM_START)
         return 0xFFFF;
-    printf("\nUnrecognized halfword read from $%08X", address);
-    exit(2);
+    printf("\n(7) Unrecognized halfword read from $%08X", address);
+    //exit(2);
+    return 0;
 }
 
 uint8_t Emulator::arm7_read_byte(uint32_t address)
@@ -245,9 +247,9 @@ uint8_t Emulator::arm7_read_byte(uint32_t address)
     }
     if (address >= 0x04000400 && address < 0x04000500)
         return spu.read_channel_byte(address);
-    printf("\nUnrecognized byte read from $%08X", address);
-    arm7.print_info();
-    exit(2);
+    printf("\n(7) Unrecognized byte read from $%08X", address);
+    //exit(2);
+    return 0;
 }
 
 void Emulator::arm7_write_word(uint32_t address, uint32_t word)
@@ -399,7 +401,7 @@ void Emulator::arm7_write_word(uint32_t address, uint32_t word)
         gpu.write_ARM7<uint32_t>(address, word);
         return;
     }
-    printf("\nUnrecognized word write of $%08X to $%08X", word, address);
+    printf("\n(7) Unrecognized word write of $%08X to $%08X", word, address);
     //exit(2);
 }
 
@@ -577,7 +579,7 @@ void Emulator::arm7_write_halfword(uint32_t address, uint16_t halfword)
     }
     if (address >= 0x04800000 && address < 0x04900000)
         return;
-    printf("\nUnrecognized halfword write of $%04X to $%08X", halfword, address);
+    printf("\n(7) Unrecognized halfword write of $%04X to $%08X", halfword, address);
     //exit(2);
 }
 
@@ -677,6 +679,6 @@ void Emulator::arm7_write_byte(uint32_t address, uint8_t byte)
     }
     if (address < 0x4000) //Ignore BIOS writes
         return;
-    printf("\nUnrecognized byte write of $%02X to $%08X", byte, address);
+    printf("\n(7) Unrecognized byte write of $%02X to $%08X", byte, address);
     //exit(2);
 }

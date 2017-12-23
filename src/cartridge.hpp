@@ -65,11 +65,13 @@ class NDS_Cart
         int cmd_encrypt_mode;
     
         std::unique_ptr<uint8_t[]> ROM;
+        std::unique_ptr<uint8_t[]> save_database;
         std::string ROM_name;
         uint8_t SPI_save[1024 * 1024 * 8];
         int save_size;
         bool flash_save;
         bool dirty_save;
+        long long database_size;
         long long ROM_size;
         uint8_t command_buffer[8];
         uint32_t data_output;
@@ -99,6 +101,7 @@ class NDS_Cart
     public:
         NDS_Cart(Emulator* e);
         void power_on();
+        int load_database(std::string file_name);
         int load_ROM(std::string file_name);
         void save_check();
     
