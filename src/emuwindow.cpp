@@ -87,11 +87,6 @@ void EmuWindow::draw_frame(uint32_t* upper_buffer, uint32_t* lower_buffer)
     QImage upper((uint8_t*)upper_buffer, PIXELS_PER_LINE, SCANLINES, QImage::Format_RGB32);
     QImage lower((uint8_t*)lower_buffer, PIXELS_PER_LINE, SCANLINES, QImage::Format_RGB32);
 
-    if (upper.isGrayscale())
-    {
-        printf("\nQImage is grayscale!");
-    }
-
     upper.setPixelColor(PIXELS_PER_LINE / 2, SCANLINES / 2, Qt::white);
 
     upper_pixmap = QPixmap::fromImage(upper);
