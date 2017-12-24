@@ -1029,7 +1029,7 @@ void GPU_2D_Engine::draw_scanline()
     }
 
     //Capture
-    if (DISPCAPCNT.enable_busy)
+    if (engine_A && DISPCAPCNT.enable_busy)
     {
         int x_size, y_size;
         switch (DISPCAPCNT.capture_size)
