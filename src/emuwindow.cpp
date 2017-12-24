@@ -85,6 +85,7 @@ void EmuWindow::draw_frame(uint32_t* upper_buffer, uint32_t* lower_buffer)
 
     upper_pixmap = QPixmap::fromImage(upper);
     lower_pixmap = QPixmap::fromImage(lower);
+
     update();
 }
 
@@ -96,8 +97,14 @@ void EmuWindow::paintEvent(QPaintEvent *event)
     if (upper_pixmap.isNull() || lower_pixmap.isNull())
         return;
 
+    printf("\nDebugging pixmap");
+    printf("\nGeometry: %dx%d", upper_pixmap.width(), upper_pixmap.height());
+    printf("\nAlpha: %d", upper_pixmap.hasAlphaChannel());
+    printf("\nDepth: %d", upper_pixmap.depth());
+
     painter.drawPixmap(0, 0, upper_pixmap);
-    painter.drawPixmap(0, SCANLINES, lower_pixmap);
+    //painter.drawPixmap(0, SCANLINES, lower_pixmap);
+    event->accept();
 }
 
 void EmuWindow::update_FPS(int FPS)
