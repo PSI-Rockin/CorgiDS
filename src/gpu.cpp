@@ -21,7 +21,7 @@ void GPU::power_on()
     cycles = 0;
     frame_complete = false;
     frames_skipped = 0;
-    set_POWCNT1(0);
+    set_POWCNT1(0x820F);
     set_DISPCNT_A(0);
     set_DISPCNT_B(0);
     set_DISPSTAT7(0);
