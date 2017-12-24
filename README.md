@@ -2,12 +2,20 @@
 A DS emulator that seeks to combine accuracy and speed. As of v0.1, it's a long way from either one, but with your support, CorgiDS will accomplish its goals.
 
 ## Compiling
-CorgiDS requires Qt 5.9 and currently supports qmake and meson. Please report any compilation errors or other problems that happen during this process.
+CorgiDS requires Qt 5.9 and currently supports qmake and meson. Please report any compilation errors or other problems that happen during this process. Pull requests are welcome for CMake support.
 
-## Building with meson
+### Building with qmake
+```
+cd CorgiDS/CorgiDS
+qmake CorgiDS.pro
+make
+```
+
+### Building with meson
 
 ```
-meson build && cd build
+meson build --buildtype=release
+cd build
 ninja
 ```
 
