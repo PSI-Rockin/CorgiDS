@@ -1163,6 +1163,12 @@ void GPU_2D_Engine::get_framebuffer(uint32_t* buffer)
         for (int x = 0; x < PIXELS_PER_LINE; x++)
             buffer[x + (y * PIXELS_PER_LINE)] = front_framebuffer[x + (y * PIXELS_PER_LINE)];
     }
+
+    if (engine_A)
+    {
+        for (int i = 0; i < 10; i++)
+            printf("\nEngine A color data: $%08X", buffer[i]);
+    }
 }
 
 void GPU_2D_Engine::set_framebuffer(uint32_t *buffer)
