@@ -27,6 +27,7 @@ void GPU::power_on()
     set_DISPSTAT7(0);
     set_DISPSTAT9(0);
     set_WIN0H_A(0);
+    set_DISPCAPCNT(0);
     for (int i = 0; i < 4; i++)
     {
         set_BGHOFS_A(0, i);

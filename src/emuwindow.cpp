@@ -290,7 +290,6 @@ void EmuWindow::load_ROM()
         Config::frameskip = 0;
         Config::hle_bios = false;
         Config::enable_framelimiter = true;
-        emuthread.press_key(DS_KEYS::DEBUGGING);
         emuthread.unpause(PAUSE_EVENT::GAME_NOT_STARTED);
         emuthread.unpause(PAUSE_EVENT::LOADING_ROM);
         //e.debug();
