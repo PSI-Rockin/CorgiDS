@@ -80,14 +80,12 @@ int EmuWindow::initialize()
 
 void EmuWindow::draw_frame(uint32_t* upper_buffer, uint32_t* lower_buffer)
 {
+    for (int i = 0; i < 10; i++)
+    {
+        printf("\nColor data on (%d, 0): $%08X", i, upper_buffer[i]);
+    }
     QImage upper((uint8_t*)upper_buffer, PIXELS_PER_LINE, SCANLINES, QImage::Format_RGB32);
     QImage lower((uint8_t*)lower_buffer, PIXELS_PER_LINE, SCANLINES, QImage::Format_RGB32);
-
-    if (upper.format() != QImage::Format_RGB32)
-    {
-        printf("\nQImage lacks RGB32 format!");
-        printf("\nActual format: %d", upper.format());
-    }
 
     if (upper.isGrayscale())
     {
@@ -109,11 +107,6 @@ void EmuWindow::paintEvent(QPaintEvent *event)
 
     if (upper_pixmap.isNull() || lower_pixmap.isNull())
         return;
-
-    printf("\nDebugging pixmap");
-    printf("\nGeometry: %dx%d", upper_pixmap.width(), upper_pixmap.height());
-    printf("\nAlpha: %d", upper_pixmap.hasAlphaChannel());
-    printf("\nDepth: %d", upper_pixmap.depth());
 
     painter.drawPixmap(0, 0, upper_pixmap);
     painter.drawPixmap(0, SCANLINES, lower_pixmap);
