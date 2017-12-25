@@ -12,6 +12,7 @@
 #include <QMainWindow>
 #include <QMouseEvent>
 #include <QLabel>
+#include <QPaintEvent>
 #include "config.hpp"
 #include "configwindow.hpp"
 #include "emulator.hpp"
@@ -22,7 +23,6 @@ class EmuWindow : public QMainWindow
     Q_OBJECT
     private:
         EmuThread emuthread;
-        QPixmap test2;
 
         ConfigWindow* cfg;
 
@@ -36,21 +36,13 @@ class EmuWindow : public QMainWindow
 
         QMenu* help_menu;
         QAction* about_act;
-        QLabel* upper_screen_label;
-        QLabel* lower_screen_label;
-
-        bool running;
-        bool emulating;
-        bool paused;
-        bool out_of_focus;
-        bool frame_finished;
-        bool mouse_pressed;
+        QPixmap upper_pixmap, lower_pixmap;
     public:
         explicit EmuWindow(QWidget *parent = nullptr);
         int initialize();
         void closeEvent(QCloseEvent* event);
-        void focusOutEvent(QFocusEvent* event);
-        void focusInEvent(QFocusEvent* event);
+        /*void focusOutEvent(QFocusEvent* event);
+        void focusInEvent(QFocusEvent* event);*/
 
         bool is_running();
         bool is_emulating();
@@ -59,6 +51,7 @@ class EmuWindow : public QMainWindow
         void mouseMoveEvent(QMouseEvent* event);
         void mousePressEvent(QMouseEvent* event);
         void mouseReleaseEvent(QMouseEvent* event);
+        void paintEvent(QPaintEvent *event);
         void keyPressEvent(QKeyEvent* event);
         void keyReleaseEvent(QKeyEvent* event);
     signals:
@@ -75,25 +68,5 @@ class EmuWindow : public QMainWindow
         void preferences();
         void screenshot();
 };
-
-inline bool EmuWindow::is_running()
-{
-    return running;
-}
-
-inline bool EmuWindow::is_emulating()
-{
-    return emulating && !(Config::pause_when_unfocused && out_of_focus) && !paused;
-}
-
-inline bool EmuWindow::finished_frame()
-{
-    if (frame_finished)
-    {
-        frame_finished = false;
-        return true;
-    }
-    return false;
-}
 
 #endif // EMUWINDOW_HPP

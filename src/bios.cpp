@@ -4,6 +4,7 @@
     See LICENSE.txt for details
 */
 
+#include <cstdio>
 #include "bios.hpp"
 
 BIOS::BIOS()

@@ -9,6 +9,7 @@
 #include <QFileDialog>
 #include <QMenuBar>
 #include <QMessageBox>
+#include <QPainter>
 #include "config.hpp"
 #include "emuwindow.hpp"
 
@@ -65,35 +66,32 @@ int EmuWindow::initialize()
     emuthread.start();
 
     cfg = new ConfigWindow(0);
-    upper_screen_label = new QLabel(this);
-    upper_screen_label->show();
-    upper_screen_label->resize(PIXELS_PER_LINE, SCANLINES);
-
-    lower_screen_label = new QLabel(this);
-    lower_screen_label->show();
-    lower_screen_label->resize(PIXELS_PER_LINE, SCANLINES);
-    lower_screen_label->move(0, SCANLINES);
-
-    running = true;
-    emulating = false;
-    paused = false;
-    out_of_focus = false;
-    mouse_pressed = false;
-    frame_finished = false;
 
     return 0;
 }
 
 void EmuWindow::draw_frame(uint32_t* upper_buffer, uint32_t* lower_buffer)
 {
-    QImage upper1((uint8_t*)upper_buffer, PIXELS_PER_LINE, SCANLINES, QImage::Format_ARGB32);
-    QPixmap upper2(PIXELS_PER_LINE, SCANLINES);
-    QImage lower1((uint8_t*)lower_buffer, PIXELS_PER_LINE, SCANLINES, QImage::Format_ARGB32);
-    QPixmap lower2(PIXELS_PER_LINE, SCANLINES);
-    upper2.convertFromImage(upper1);
-    lower2.convertFromImage(lower1);
-    upper_screen_label->setPixmap(upper2);
-    lower_screen_label->setPixmap(lower2);
+    QImage upper((uint8_t*)upper_buffer, PIXELS_PER_LINE, SCANLINES, QImage::Format_RGB32);
+    QImage lower((uint8_t*)lower_buffer, PIXELS_PER_LINE, SCANLINES, QImage::Format_RGB32);
+
+    upper_pixmap = QPixmap::fromImage(upper);
+    lower_pixmap = QPixmap::fromImage(lower);
+
+    update();
+}
+
+void EmuWindow::paintEvent(QPaintEvent *event)
+{
+    QPainter painter(this);
+    painter.fillRect(rect(), Qt::black);
+
+    if (upper_pixmap.isNull() || lower_pixmap.isNull())
+        return;
+
+    painter.drawPixmap(0, 0, upper_pixmap);
+    painter.drawPixmap(0, SCANLINES, lower_pixmap);
+    event->accept();
 }
 
 void EmuWindow::update_FPS(int FPS)
@@ -108,7 +106,7 @@ void EmuWindow::closeEvent(QCloseEvent *event)
 }
 
 //TODO: add configurable option to pause emulation when out-of-focus
-void EmuWindow::focusOutEvent(QFocusEvent *event)
+/*void EmuWindow::focusOutEvent(QFocusEvent *event)
 {
     event->accept();
     out_of_focus = true;
@@ -118,7 +116,7 @@ void EmuWindow::focusInEvent(QFocusEvent *event)
 {
     event->accept();
     out_of_focus = false;
-}
+}*/
 
 void EmuWindow::mouseMoveEvent(QMouseEvent *event)
 {

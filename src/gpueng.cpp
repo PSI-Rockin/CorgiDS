@@ -1029,7 +1029,7 @@ void GPU_2D_Engine::draw_scanline()
     }
 
     //Capture
-    if (DISPCAPCNT.enable_busy)
+    if (engine_A && DISPCAPCNT.enable_busy)
     {
         int x_size, y_size;
         switch (DISPCAPCNT.capture_size)
@@ -1149,6 +1149,14 @@ void GPU_2D_Engine::draw_scanline()
             }
             break;
     }
+
+    /*if (engine_A && gpu->get_VCOUNT() == 0)
+    {
+        for (int i = 0; i < 5; i++)
+        {
+            printf("\nColor data on scanline 0: $%08X", front_framebuffer[i]);
+        }
+    }*/
 }
 
 void GPU_2D_Engine::handle_BLDCNT_effects()
@@ -1163,6 +1171,12 @@ void GPU_2D_Engine::get_framebuffer(uint32_t* buffer)
         for (int x = 0; x < PIXELS_PER_LINE; x++)
             buffer[x + (y * PIXELS_PER_LINE)] = front_framebuffer[x + (y * PIXELS_PER_LINE)];
     }
+
+    /*if (engine_A)
+    {
+        for (int i = 0; i < 5; i++)
+            printf("\nEngine A final color data: $%08X", buffer[i]);
+    }*/
 }
 
 void GPU_2D_Engine::set_framebuffer(uint32_t *buffer)
