@@ -108,8 +108,8 @@ void NDS_Cart::init_keycode(uint32_t idcode, int level, uint32_t modulo)
 
 void NDS_Cart::power_on()
 {
-    flash_save = true;
     save_size = 1024 * 1024;
+    save_type = 2;
     cycles_left = 8;
     bytes_left = 0;
     ROMCTRL.word_ready = true;
@@ -226,6 +226,9 @@ int NDS_Cart::load_ROM(string file_name)
                     int size_index = save_database[18 + (index * 19)];
                     switch (size_index)
                     {
+                        case 0x02:
+                            save_size = 512;
+                            break;
                         case 0x03:
                             save_size = 1024 * 8;
                             break;
@@ -251,7 +254,12 @@ int NDS_Cart::load_ROM(string file_name)
         }
     }
 
-    flash_save = save_size > (1024 * 64);
+    if (save_size == 512)
+        save_type = 0;
+    if (save_size >= 1024 * 8 && save_size <= 1024 * 64)
+        save_type = 1;
+    if (save_size > 1024 * 64)
+        save_type = 2;
 
     //Only re-encrypt the ROM if this is not a direct boot
     if (Config::direct_boot_enabled)
@@ -451,6 +459,7 @@ void NDS_Cart::set_AUXSPICNT(uint16_t value)
     set_hi_AUXSPICNT(value >> 8);
 }
 
+//TODO: make this function a lot cleaner
 void NDS_Cart::set_AUXSPIDATA(uint8_t value)
 {
     if (spi_cmd == AUXSPI_COMMAND::EMPTY)
@@ -484,7 +493,14 @@ void NDS_Cart::set_AUXSPIDATA(uint8_t value)
                 break;
             case 10:
                 printf("\nAUXSPI page write");
-                spi_cmd = AUXSPI_COMMAND::PAGE_WRITE;
+                if (save_type == 2)
+                    spi_cmd = AUXSPI_COMMAND::PAGE_WRITE;
+                else
+                    spi_cmd = AUXSPI_COMMAND::WRITE_HI;
+                break;
+            case 11:
+                if (save_type == 0)
+                    spi_cmd = AUXSPI_COMMAND::READ_HI;
                 break;
             default:
                 printf("\nUnrecognized AUXSPI cmd %d", value);
@@ -497,9 +513,44 @@ void NDS_Cart::set_AUXSPIDATA(uint8_t value)
         {
             case AUXSPI_COMMAND::READ_STATUS_REG:
                 spi_data = spi_write_enabled << 1;
+                if (save_type == 0)
+                    spi_data |= 0xF0;
                 break;
             case AUXSPI_COMMAND::WRITE_MEM:
-                if (!flash_save && spi_params < 3)
+                switch (save_type)
+                {
+                    case 0:
+                        if (spi_params < 2)
+                            spi_addr = value;
+                        else if (spi_write_enabled)
+                        {
+                            dirty_save = true;
+                            SPI_save[spi_addr & 0xFF] = value;
+                            spi_addr++;
+                        }
+                        break;
+                    case 1:
+                        if (spi_params < 3)
+                            spi_addr |= value << ((2 - spi_params) * 8);
+                        else if (spi_write_enabled)
+                        {
+                            dirty_save = true;
+                            SPI_save[spi_addr & (save_size - 1)] = value;
+                            spi_addr++;
+                        }
+                        break;
+                    case 2:
+                        if (spi_params < 4)
+                            spi_addr |= value << ((3 - spi_params) * 8);
+                        else if (spi_write_enabled)
+                        {
+                            dirty_save = true;
+                            SPI_save[spi_addr & (save_size - 1)] = 0;
+                            spi_addr++;
+                        }
+                        break;
+                }
+                /*if (!flash_save && spi_params < 3)
                     spi_addr |= value << ((2 - spi_params) * 8);
                 else if (flash_save && spi_params < 4)
                     spi_addr |= value << ((3 - spi_params) * 8);
@@ -515,26 +566,47 @@ void NDS_Cart::set_AUXSPIDATA(uint8_t value)
 
                         spi_addr++;
                     }
-                }
+                }*/
                 printf("\nWRITE_MEM: %d", value);
                 break;
             case AUXSPI_COMMAND::READ_MEM:
-                if (!flash_save && spi_params < 3)
-                    spi_addr |= value << ((2 - spi_params) * 8);
-                else if (flash_save && spi_params < 4)
+                switch (save_type)
                 {
-                    spi_addr <<= 8;
-                    spi_addr |= value;
-                }
-                else
-                {
-                    spi_data = SPI_save[spi_addr & (save_size - 1)];
-                    spi_addr++;
+                    case 0:
+                        if (spi_params < 2)
+                            spi_addr |= value;
+                        else
+                        {
+                            spi_data = SPI_save[spi_addr & 0xFF];
+                            spi_addr++;
+                        }
+                        break;
+                    case 1:
+                        if (spi_params < 3)
+                            spi_addr |= value << ((2 - spi_params) * 8);
+                        else
+                        {
+                            spi_data = SPI_save[spi_addr & (save_size - 1)];
+                            spi_addr++;
+                        }
+                        break;
+                    case 2:
+                        if (spi_params < 4)
+                        {
+                            spi_addr <<= 8;
+                            spi_addr |= value;
+                        }
+                        else
+                        {
+                            spi_data = SPI_save[spi_addr & (save_size - 1)];
+                            spi_addr++;
+                        }
+                        break;
                 }
                 printf("\nREAD_MEM: %d", value);
                 break;
             case AUXSPI_COMMAND::PAGE_WRITE:
-                if (flash_save)
+                if (save_type == 2)
                 {
                     if (spi_params < 4)
                     {
@@ -551,6 +623,32 @@ void NDS_Cart::set_AUXSPIDATA(uint8_t value)
                             spi_addr++;
                         }
                     }
+                }
+                break;
+            case AUXSPI_COMMAND::WRITE_HI:
+                if (spi_params < 2)
+                    spi_addr = 0x100 | value;
+                else
+                {
+                    if (spi_write_enabled)
+                    {
+                        dirty_save = true;
+                        SPI_save[spi_addr & 0x1FF] = value;
+                        spi_addr++;
+                        if (spi_addr == 0x200)
+                            spi_addr = 0x100;
+                    }
+                }
+                break;
+            case AUXSPI_COMMAND::READ_HI:
+                if (spi_params < 2)
+                    spi_addr = 0x100 | value;
+                else
+                {
+                    spi_data = SPI_save[spi_addr & 0x1FF];
+                    spi_addr++;
+                    if (spi_addr == 0x200)
+                        spi_addr = 0x100;
                 }
                 break;
             default:

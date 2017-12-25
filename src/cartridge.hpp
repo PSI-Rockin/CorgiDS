@@ -27,7 +27,9 @@ enum class AUXSPI_COMMAND
     WRITE_MEM,
     READ_MEM,
     READ_STATUS_REG,
-    PAGE_WRITE
+    PAGE_WRITE,
+    WRITE_HI,
+    READ_HI
 };
 
 struct REG_ROMCTRL
@@ -69,7 +71,7 @@ class NDS_Cart
         std::string ROM_name;
         uint8_t SPI_save[1024 * 1024 * 8];
         int save_size;
-        bool flash_save;
+        int save_type;
         bool dirty_save;
         long long database_size;
         long long ROM_size;
