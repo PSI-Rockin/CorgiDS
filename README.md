@@ -4,6 +4,9 @@ A DS emulator that seeks to combine accuracy and speed. As of v0.1, it's a long 
 ## Compiling
 CorgiDS requires Qt 5.9 and currently supports qmake and meson. Please report any compilation errors or other problems that happen during this process. Pull requests are welcome for CMake support.
 
+### Known issues
+On Windows, builds compiled with Visual Studio fail to boot any games and display a gray screen during execution. For now, use mingw instead.
+
 ### Building with qmake
 ```
 cd CorgiDS/CorgiDS
@@ -12,7 +15,6 @@ make
 ```
 
 ### Building with meson
-
 ```
 meson build --buildtype=release
 cd build
@@ -36,7 +38,7 @@ BACK UP YOUR SAVEFILES BEFORE USING CORGIDS
 
 CorgiDS is incapable of automatically detecting what kind of save an arbitrary game uses. It is recommended to have save files corresponding with the game you want to test.
 
-Alternatively, you may use a save database. CorgiDS supports the AKAIO (AceKard All-In-One) savelist.bin. This is configured the same way the BIOS/firmware are. [Download savelist.bin here.](http://akaio.net/data/savelist.bin) Note that the database is outdated and will not work for newer DS games.
+Alternatively, you may use a save database. CorgiDS supports the AKAIO (AceKard All-In-One) savelist.bin. This is configured the same way the BIOS/firmware are. [Download savelist.bin here.](http://akaio.net/data/savelist.bin) Note that the database is outdated and may not work for newer DS games.
 
 If neither of the above checks pass, CorgiDS defaults to a 1 MB FLASH save, under the assumption that newer games will rely on FLASH rather than EEPROM due to increased storage space.
 
@@ -56,7 +58,7 @@ Other features are accessible through these keys:
 * P: pause/unpause emulation
 
 ## Contributing
-If you have no coding experience but wish to contribute to CorgiDS' development, playtest as many games as possible and use the GitHub issue tracker to report problems. For v0.1, please only report egregious problems, such as ROMs not booting or major graphical glitches. Due to being relatively new, CorgiDS still has minor issues in many games.
+If you have no coding experience but wish to contribute to CorgiDS' development, playtest as many games as possible and use the GitHub issue tracker to report problems. For v0.1, please only report egregious problems, such as ROMs not booting or major graphical glitches. Due to being relatively new, CorgiDS still has minor issues in many games, such as shadows not appearing or bad transitions in the intros of many games.
 
 ## Licensing
 CorgiDS is licensed under the GNU GPLv3. See [LICENSE](LICENSE) for details.
