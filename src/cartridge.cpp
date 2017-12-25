@@ -141,14 +141,14 @@ int NDS_Cart::load_database(string file_name)
     ifstream file(file_name, ios::binary | ios::in);
     if (!file.is_open())
     {
-        printf("Failed to load %s\n", file_name.c_str());
+        printf("Failed to load save database.\n");
         return 1;
     }
 
     database_size = get_file_size(file_name);
     if (database_size % 19)
     {
-        printf("Save database corrupted or in wrong format\n");
+        printf("Save database corrupted or in wrong format.\n");
         return 1;
     }
 

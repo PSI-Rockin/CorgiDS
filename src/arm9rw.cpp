@@ -323,7 +323,8 @@ uint8_t Emulator::arm9_read_byte(uint32_t address)
     if (address >= GBA_ROM_START)
         return 0xFF;
     printf("\n(9) Unrecognized byte read from $%08X", address);
-    exit(1);
+    //exit(1);
+    return 0;
 }
 
 void Emulator::arm9_write_word(uint32_t address, uint32_t word)

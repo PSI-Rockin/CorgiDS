@@ -66,28 +66,14 @@ int EmuWindow::initialize()
     emuthread.start();
 
     cfg = new ConfigWindow(0);
-    /*upper_screen_label = new QLabel(this);
-    upper_screen_label->show();
-    upper_screen_label->resize(PIXELS_PER_LINE, SCANLINES);
-
-    lower_screen_label = new QLabel(this);
-    lower_screen_label->show();
-    lower_screen_label->resize(PIXELS_PER_LINE, SCANLINES);
-    lower_screen_label->move(0, SCANLINES);*/
 
     return 0;
 }
 
 void EmuWindow::draw_frame(uint32_t* upper_buffer, uint32_t* lower_buffer)
 {
-    /*for (int i = 0; i < 10; i++)
-    {
-        printf("\nColor data on (%d, 0): $%08X", i, upper_buffer[i]);
-    }*/
     QImage upper((uint8_t*)upper_buffer, PIXELS_PER_LINE, SCANLINES, QImage::Format_RGB32);
     QImage lower((uint8_t*)lower_buffer, PIXELS_PER_LINE, SCANLINES, QImage::Format_RGB32);
-
-    upper.setPixelColor(PIXELS_PER_LINE / 2, SCANLINES / 2, Qt::white);
 
     upper_pixmap = QPixmap::fromImage(upper);
     lower_pixmap = QPixmap::fromImage(lower);
