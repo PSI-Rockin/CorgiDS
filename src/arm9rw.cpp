@@ -300,6 +300,8 @@ uint8_t Emulator::arm9_read_byte(uint32_t address)
             return gpu.get_VRAMCNT_A();
         case 0x04000241:
             return gpu.get_VRAMCNT_B();
+        case 0x04000247:
+            return WRAMCNT & 0x3;
         case 0x04000300:
             return POSTFLG9;
         case 0x04004000:

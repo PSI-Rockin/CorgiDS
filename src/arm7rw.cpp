@@ -228,6 +228,8 @@ uint8_t Emulator::arm7_read_byte(uint32_t address)
             return 0;
         case 0x0400021C: //DSi IF2
             return 0;
+        case 0x04000241:
+            return WRAMCNT & 0x3;
         case 0x04000300:
             return POSTFLG7;
         case 0x04000501:

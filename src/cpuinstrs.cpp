@@ -724,6 +724,7 @@ void Interpreter::signed_halfword_multiply(ARM_CPU &cpu, uint32_t instruction)
     switch (opcode)
     {
         case 0x8:
+            //SMLAxy
             if (first_op_top)
                 product = (int16_t)(cpu.get_register(first_operand) >> 16);
             else
@@ -740,6 +741,7 @@ void Interpreter::signed_halfword_multiply(ARM_CPU &cpu, uint32_t instruction)
                 cpu.get_CPSR()->sticky_overflow = true;
             break;
         case 0xB:
+            //SMULxy
             if (first_op_top)
                 product = (int16_t)(cpu.get_register(first_operand) >> 16);
             else
