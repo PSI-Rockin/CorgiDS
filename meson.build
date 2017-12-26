@@ -67,4 +67,4 @@ headers = ['src/cartridge.hpp',
 moc_files = qt5.preprocess(ui_files: ui,
                           moc_headers: headers)
 
-executable('corgids', src, moc_files, dependencies : qt5dep)
+executable('corgids', src, moc_files, dependencies : qt5dep, install : true)
