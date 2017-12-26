@@ -17,7 +17,7 @@ uint32_t Emulator::arm9_read_word(uint32_t address)
         switch (WRAMCNT)
         {
             case 0: //Entire 32 KB
-                return *(uint32_t*)&shared_WRAM[address & 0x7FFF]
+                return *(uint32_t*)&shared_WRAM[address & 0x7FFF];
             case 1: //Second half
                 return *(uint32_t*)&shared_WRAM[(address & 0x3FFF) + 0x4000];
             case 2: //First half
@@ -162,7 +162,7 @@ uint16_t Emulator::arm9_read_halfword(uint32_t address)
         switch (WRAMCNT)
         {
             case 0: //Entire 32 KB
-                return *(uint16_t*)&shared_WRAM[address & 0x7FFF]
+                return *(uint16_t*)&shared_WRAM[address & 0x7FFF];
             case 1: //Second half
                 return *(uint16_t*)&shared_WRAM[(address & 0x3FFF) + 0x4000];
             case 2: //First half
@@ -314,7 +314,7 @@ uint8_t Emulator::arm9_read_byte(uint32_t address)
         switch (WRAMCNT)
         {
             case 0: //Entire 32 KB
-                return shared_WRAM[address & 0x7FFF]
+                return shared_WRAM[address & 0x7FFF];
             case 1: //Second half
                 return shared_WRAM[(address & 0x3FFF) + 0x4000];
             case 2: //First half
