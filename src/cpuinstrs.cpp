@@ -740,6 +740,30 @@ void Interpreter::signed_halfword_multiply(ARM_CPU &cpu, uint32_t instruction)
             if (ADD_OVERFLOW(product, cpu.get_register(accumulate), result))
                 cpu.get_CPSR()->sticky_overflow = true;
             break;
+        case 0x9:
+            //SMULWy/SMLAWy
+            //TODO: is all this correct?
+            if (first_op_top)
+                product = (int16_t)(cpu.get_register(first_operand) >> 16);
+            else
+                product = (int16_t)(cpu.get_register(first_operand) & 0xFFFF);
+
+            if (!(instruction & (1 << 5))) //SMLAW
+            {
+                int64_t big_product = product * (int32_t)cpu.get_register(second_operand);
+                big_product /= 0x10000;
+                result = big_product + cpu.get_register(accumulate);
+
+                if (ADD_OVERFLOW(big_product, cpu.get_register(accumulate), result))
+                    cpu.get_CPSR()->sticky_overflow = true;
+            }
+            else //SMULW
+            {
+                int64_t big_product = product * (int32_t)cpu.get_register(second_operand);
+                big_product /= 0x10000;
+                result = big_product;
+            }
+            break;
         case 0xB:
             //SMULxy
             if (first_op_top)
