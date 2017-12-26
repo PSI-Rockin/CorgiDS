@@ -12,6 +12,20 @@ uint32_t Emulator::arm9_read_word(uint32_t address)
         return *(uint32_t*)&arm9_bios[address - 0xFFFF0000];
     if (address >= MAIN_RAM_START && address < SHARED_WRAM_START)
         return *(uint32_t*)&main_RAM[address & MAIN_RAM_MASK];
+    if (address >= SHARED_WRAM_START && address < IO_REGS_START)
+    {
+        switch (WRAMCNT)
+        {
+            case 0: //Entire 32 KB
+                return *(uint32_t*)&shared_WRAM[address & 0x7FFF]
+            case 1: //Second half
+                return *(uint32_t*)&shared_WRAM[(address & 0x3FFF) + 0x4000];
+            case 2: //First half
+                return *(uint32_t*)&shared_WRAM[address & 0x3FFF];
+            case 3: //Undefined memory
+                return 0;
+        }
+    }
     switch (address)
     {
         case 0x04000000:
@@ -142,6 +156,20 @@ uint16_t Emulator::arm9_read_halfword(uint32_t address)
     if (address >= MAIN_RAM_START && address < SHARED_WRAM_START)
     {
         return *(uint16_t*)&main_RAM[address & MAIN_RAM_MASK];
+    }
+    if (address >= SHARED_WRAM_START && address < IO_REGS_START)
+    {
+        switch (WRAMCNT)
+        {
+            case 0: //Entire 32 KB
+                return *(uint16_t*)&shared_WRAM[address & 0x7FFF]
+            case 1: //Second half
+                return *(uint16_t*)&shared_WRAM[(address & 0x3FFF) + 0x4000];
+            case 2: //First half
+                return *(uint16_t*)&shared_WRAM[address & 0x3FFF];
+            case 3: //Undefined memory
+                return 0;
+        }
     }
     if (address >= PALETTE_START && address < VRAM_BGA_START)
     {
@@ -280,6 +308,20 @@ uint8_t Emulator::arm9_read_byte(uint32_t address)
     if (address >= MAIN_RAM_START && address < SHARED_WRAM_START)
     {
         return main_RAM[address & MAIN_RAM_MASK];
+    }
+    if (address >= SHARED_WRAM_START && address < IO_REGS_START)
+    {
+        switch (WRAMCNT)
+        {
+            case 0: //Entire 32 KB
+                return shared_WRAM[address & 0x7FFF]
+            case 1: //Second half
+                return shared_WRAM[(address & 0x3FFF) + 0x4000];
+            case 2: //First half
+                return shared_WRAM[address & 0x3FFF];
+            case 3: //Undefined memory
+                return 0;
+        }
     }
     switch (address)
     {
