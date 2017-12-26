@@ -38,6 +38,7 @@ namespace Interpreter
     void load_signed_byte(ARM_CPU& cpu, uint32_t instruction);
     void load_signed_halfword(ARM_CPU& cpu, uint32_t instruction);
     void store_doubleword(ARM_CPU& cpu, uint32_t instruction);
+    void load_doubleword(ARM_CPU& cpu, uint32_t instruction);
     void store_block(ARM_CPU& cpu, uint32_t instruction);
     void load_block(ARM_CPU& cpu, uint32_t instruction);
     void branch(ARM_CPU& cpu, uint32_t instruction);

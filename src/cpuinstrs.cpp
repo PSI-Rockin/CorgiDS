@@ -1272,11 +1272,57 @@ void Interpreter::store_doubleword(ARM_CPU &cpu, uint32_t instruction)
         cpu.write_word(address + 4, cpu.get_register(source + 1));
 
         if (write_back)
-            cpu.set_register(cpu.get_register(base), address + 4);
+            cpu.set_register(base, address + 4);
     }
     else
     {
         printf("STRD postindexing not supported");
+        exit(1);
+    }
+}
+
+void Interpreter::load_doubleword(ARM_CPU &cpu, uint32_t instruction)
+{
+    if (cpu.get_id())
+    {
+        cpu.handle_UNDEFINED();
+        return;
+    }
+
+    bool is_preindexing = instruction & (1 << 24);
+    bool add_offset = instruction & (1 << 23);
+    bool is_imm_offset = instruction & (1 << 22);
+    bool write_back = instruction & (1 << 21);
+
+    uint32_t base = (instruction >> 16) & 0xF;
+    uint32_t dest = (instruction >> 12) & 0xF;
+
+    int offset;
+
+    offset = instruction & 0xF;
+    if (is_imm_offset)
+        offset |= (instruction >> 4) & 0xF0;
+    else
+        offset = cpu.get_register(offset);
+
+    uint32_t address = cpu.get_register(base);
+
+    if (is_preindexing)
+    {
+        if (add_offset)
+            address += offset;
+        else
+            address -= offset;
+
+        cpu.set_register(dest, cpu.read_word(address));
+        cpu.set_register(dest + 1, cpu.read_word(address + 4));
+
+        if (write_back)
+            cpu.set_register(base, address + 4);
+    }
+    else
+    {
+        printf("LDRD postindexing not supported");
         exit(1);
     }
 }
