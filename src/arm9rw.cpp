@@ -252,6 +252,14 @@ uint16_t Emulator::arm9_read_halfword(uint32_t address)
             return EXMEMCNT;
         case 0x04000208:
             return int9_reg.IME;
+        case 0x04000210:
+            return int9_reg.IE & 0xFFFF;
+        case 0x04000212:
+            return int9_reg.IE >> 16;
+        case 0x04000214:
+            return int9_reg.IF & 0xFFFF;
+        case 0x04000216:
+            return int9_reg.IF >> 16;
         case 0x04000280:
             return DIVCNT;
         case 0x040002B0:
@@ -1038,6 +1046,14 @@ void Emulator::arm9_write_halfword(uint32_t address, uint16_t halfword)
             return;
         case 0x04000208:
             int9_reg.IME = halfword & 0x1;
+            return;
+        case 0x04000210:
+            int9_reg.IE &= ~0xFFFF;
+            int9_reg.IE |= halfword;
+            return;
+        case 0x04000212:
+            int9_reg.IE &= ~0xFFFF0000;
+            int9_reg.IE |= halfword << 16;
             return;
         case 0x04000248:
             gpu.set_VRAMCNT_H(halfword & 0xFF);
