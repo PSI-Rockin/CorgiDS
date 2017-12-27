@@ -37,6 +37,8 @@ class EmuWindow : public QMainWindow
         QMenu* help_menu;
         QAction* about_act;
         QPixmap upper_pixmap, lower_pixmap;
+
+        int menubar_height;
     public:
         explicit EmuWindow(QWidget *parent = nullptr);
         int initialize();

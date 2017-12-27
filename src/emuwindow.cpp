@@ -51,8 +51,12 @@ int EmuWindow::initialize()
     help_menu->addAction(about_act);
 
     menuBar()->show();
-    resize(PIXELS_PER_LINE, SCANLINES * 2);
-    setMinimumSize(PIXELS_PER_LINE, SCANLINES * 2);
+    if (menuBar()->isNativeMenuBar()) //Check for a global menubar, such as on OS X and Ubuntu
+        menubar_height = 0;
+    else
+        menubar_height = menuBar()->height();
+    resize(PIXELS_PER_LINE, SCANLINES * 2 + menubar_height);
+    setMinimumSize(PIXELS_PER_LINE, SCANLINES * 2 + menubar_height);
     setWindowTitle("CorgiDS");
     show();
 
@@ -89,8 +93,8 @@ void EmuWindow::paintEvent(QPaintEvent *event)
     if (upper_pixmap.isNull() || lower_pixmap.isNull())
         return;
 
-    painter.drawPixmap(0, 0, upper_pixmap);
-    painter.drawPixmap(0, SCANLINES, lower_pixmap);
+    painter.drawPixmap(0, menubar_height, upper_pixmap);
+    painter.drawPixmap(0, SCANLINES + menubar_height, lower_pixmap);
     event->accept();
 }
 
@@ -122,11 +126,11 @@ void EmuWindow::mouseMoveEvent(QMouseEvent *event)
 {
     event->accept();
 
-    if (event->y() > SCANLINES)
+    if (event->y() > SCANLINES + menubar_height)
     {
         QPoint coords = QCursor::pos();
         coords = this->mapFromGlobal(coords);
-        emit touchscreen_event(coords.x(), coords.y() - SCANLINES);
+        emit touchscreen_event(coords.x(), coords.y() - (SCANLINES + menubar_height));
     }
 }
 
@@ -134,11 +138,11 @@ void EmuWindow::mousePressEvent(QMouseEvent *event)
 {
     event->accept();
 
-    if (event->y() > SCANLINES)
+    if (event->y() > SCANLINES + menubar_height)
     {
         QPoint coords = QCursor::pos();
         coords = this->mapFromGlobal(coords);
-        emit touchscreen_event(coords.x(), coords.y() - SCANLINES);
+        emit touchscreen_event(coords.x(), coords.y() - (SCANLINES + menubar_height));
     }
 }
 
