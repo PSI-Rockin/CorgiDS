@@ -56,7 +56,7 @@ void POWCNT2_REG::set(uint8_t byte)
 }
 
 Emulator::Emulator() : arm7(this, 1), arm9(this, 0), arm9_cp15(this), cart(this), dma(this),
-                       gpu(this), spi(this), timers(this) {}
+                       gpu(this), spi(this), spu(this), timers(this) {}
 
 int Emulator::init()
 {
@@ -280,12 +280,17 @@ void Emulator::run()
             timers.run_timers9(arm9.cycles_ran() >> 1);
             gpu.run_3D(arm9.cycles_ran() >> 1);
         }
+        uint64_t arm7_diff = arm7.get_timestamp();
         //Now handle ARM7
         while (arm7.get_timestamp() < system_timestamp)
         {
             arm7.execute();
             timers.run_timers7(arm7.cycles_ran());
         }
+
+        arm7_diff = arm7.get_timestamp() - arm7_diff;
+
+        spu.generate_sample(arm7_diff);
 
         if (system_timestamp >= GPU_event.activation_time)
             gpu.handle_event(GPU_event);
@@ -402,6 +407,11 @@ ARM_CPU* Emulator::get_arm9()
 ARM_CPU* Emulator::get_arm7()
 {
     return &arm7;
+}
+
+SPU* Emulator::get_SPU()
+{
+    return &spu;
 }
 
 bool Emulator::arm7_has_cart_rights()

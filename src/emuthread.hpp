@@ -50,6 +50,8 @@ class EmuThread : public QThread
         int load_firmware();
         void load_save_database();
         int load_game(QString ROM_file);
+
+        Emulator* get_emulator();
     protected:
         void run() override;
     signals:

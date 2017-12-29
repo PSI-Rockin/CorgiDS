@@ -60,6 +60,28 @@ int EmuWindow::initialize()
     setWindowTitle("CorgiDS");
     show();
 
+    spu_audio.set_SPU(emuthread.get_emulator()->get_SPU());
+    spu_audio.open(QIODevice::ReadOnly);
+
+    //Initialize audio
+    //TODO: Is it better to place audio on the GUI thread or the emulation thread?
+    QAudioFormat burp;
+    burp.setSampleRate(32824);
+    burp.setChannelCount(2); //stereo
+    burp.setSampleSize(16);
+    burp.setByteOrder(QAudioFormat::LittleEndian);
+    burp.setSampleType(QAudioFormat::SignedInt);
+    burp.setCodec("audio/pcm");
+
+    QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
+    if (!info.isFormatSupported(burp))
+        printf("Audio initialization failed\n");
+    else
+        printf("Audio format supported\n");
+
+    audio = new QAudioOutput(burp, nullptr);
+    audio->start(&spu_audio);
+
     connect(this, SIGNAL(shutdown()), &emuthread, SLOT(shutdown()));
     connect(&emuthread, SIGNAL(finished_frame(uint32_t*,uint32_t*)), this, SLOT(draw_frame(uint32_t*,uint32_t*)));
     connect(&emuthread, SIGNAL(update_FPS(int)), this, SLOT(update_FPS(int)));

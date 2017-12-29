@@ -156,7 +156,7 @@ class Emulator
 
         bool frame_complete();
         bool display_swapped();
-        bool DMA_active();
+        bool DMA_active(int cpu_id);
     
         void HBLANK_DMA_request();
         void gamecart_DMA_request();
@@ -194,6 +194,7 @@ class Emulator
     
         ARM_CPU* get_arm9();
         ARM_CPU* get_arm7();
+        SPU* get_SPU();
 
         void button_up_pressed();
         void button_down_pressed();
@@ -249,9 +250,9 @@ bool inline Emulator::display_swapped()
     return gpu.display_swapped();
 }
 
-bool inline Emulator::DMA_active()
+bool inline Emulator::DMA_active(int cpu_id)
 {
-    return dma.is_active();
+    return dma.is_active(cpu_id);
 }
 
 void inline Emulator::button_up_pressed()

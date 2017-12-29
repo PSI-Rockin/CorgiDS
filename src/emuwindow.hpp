@@ -7,15 +7,17 @@
 #ifndef EMUWINDOW_HPP
 #define EMUWINDOW_HPP
 
+#include <QAudioFormat>
+#include <QAudioOutput>
 #include <QCloseEvent>
 #include <QFocusEvent>
 #include <QMainWindow>
 #include <QMouseEvent>
 #include <QLabel>
 #include <QPaintEvent>
+#include "audiodevice.hpp"
 #include "config.hpp"
 #include "configwindow.hpp"
-#include "emulator.hpp"
 #include "emuthread.hpp"
 
 class EmuWindow : public QMainWindow
@@ -23,6 +25,10 @@ class EmuWindow : public QMainWindow
     Q_OBJECT
     private:
         EmuThread emuthread;
+
+        AudioDevice spu_audio;
+        QAudioFormat format;
+        QAudioOutput* audio;
 
         ConfigWindow* cfg;
 

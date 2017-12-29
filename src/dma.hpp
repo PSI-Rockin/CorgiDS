@@ -53,7 +53,7 @@ class NDS_DMA
 
         void handle_event(SchedulerEvent& event);
 
-        bool is_active();
+        bool is_active(int cpu_id);
     
         uint32_t read_source(int index);
         uint16_t read_len(int index);
@@ -70,9 +70,9 @@ class NDS_DMA
         void GXFIFO_request();
 };
 
-inline bool NDS_DMA::is_active()
+inline bool NDS_DMA::is_active(int cpu_id)
 {
-    return active_DMAs;
+    return active_DMAs & (0xF << (cpu_id * 4));
 }
 
 #endif /* dma_hpp */

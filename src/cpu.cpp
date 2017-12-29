@@ -240,14 +240,14 @@ void ARM_CPU::execute()
 {
     last_timestamp = timestamp;
     //TODO: replace these comparisons with a generic "halt state" variable
-    if (halted || e->DMA_active())
+    if (halted || e->DMA_active(cpu_id))
     {
         //Wait until next event
         timestamp = e->get_timestamp() << (1 - cpu_id);
         if (e->requesting_interrupt(cpu_id))
         {
             halted = false;
-            if (!CPSR.IRQ_disabled && !e->DMA_active())
+            if (!CPSR.IRQ_disabled && !e->DMA_active(cpu_id))
                 handle_IRQ();
         }
         return;

@@ -43,6 +43,11 @@ int EmuThread::load_game(QString ROM_name)
     return error;
 }
 
+Emulator* EmuThread::get_emulator()
+{
+    return &e;
+}
+
 void EmuThread::run()
 {
     abort = false;
@@ -51,6 +56,7 @@ void EmuThread::run()
     long long second_count = 1000000;
     int frames = 0;
     auto FPS_update = chrono::system_clock::now();
+
     forever
     {
         emu_mutex.lock();

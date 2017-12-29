@@ -64,7 +64,7 @@ uint32_t Emulator::arm7_read_word(uint32_t address)
             return cart.get_output();
     }
     if (address >= 0x04000400 && address < 0x04000500)
-        return 0;
+        return spu.read_channel_word(address);
     if (address < 0x4000)
     {
         if (arm7.get_PC() > 0x4000)
@@ -185,8 +185,8 @@ uint16_t Emulator::arm7_read_halfword(uint32_t address)
         case 0x04808180:
             return wifi.get_W_RF_BUSY();
     }
-    if (address >= 0x04000400 && address < 0x04000500)
-        return 0;
+    //if (address >= 0x04000400 && address < 0x04000500)
+        //return 0;
     if (address >= 0x04800000 && address < 0x04900000)
         return 0;
     if (address >= 0x06000000 && address < 0x07000000)

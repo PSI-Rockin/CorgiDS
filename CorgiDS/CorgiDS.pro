@@ -1,4 +1,4 @@
-QT += core gui
+QT += core gui multimedia
 greaterThan(QT_MAJOR_VERSION, 4) : QT += widgets
 
 QMAKE_CFLAGS_RELEASE -= -O
@@ -43,7 +43,8 @@ SOURCES += \
     ../src/gpu3d.cpp \
     ../src/armtable.cpp \
     ../src/emuthread.cpp \
-    ../src/bios.cpp
+    ../src/bios.cpp \
+    ../src/audiodevice.cpp
 
 DEFINES += QT_DEPRECATED_WARNINGS
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000
@@ -75,7 +76,8 @@ HEADERS += \
     ../src/gpueng.hpp \
     ../src/gpu3d.hpp \
     ../src/emuthread.hpp \
-    ../src/bios.hpp
+    ../src/bios.hpp \
+    ../src/audiodevice.hpp
 
 FORMS += \
     ../src/configwindow.ui \
