@@ -581,6 +581,11 @@ void Emulator::arm7_write_halfword(uint32_t address, uint16_t halfword)
     }
     if (address >= 0x04800000 && address < 0x04900000)
         return;
+    if (address >= 0x06000000 && address < 0x07000000)
+    {
+        gpu.write_ARM7<uint16_t>(address, halfword);
+        return;
+    }
     printf("\n(7) Unrecognized halfword write of $%04X to $%08X", halfword, address);
     //exit(2);
 }

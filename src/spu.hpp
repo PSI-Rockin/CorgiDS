@@ -57,22 +57,23 @@ struct SoundChannel
     int current_position;
     int16_t current_sample;
 
-    int16_t ADPCM_sample;
-    uint8_t ADPCM_index;
+    int32_t ADPCM_sample, ADPCM_sample_loop;
+    int32_t ADPCM_index, ADPCM_index_loop;
 
     void start();
-    void run(int32_t& output);
+    void run(int32_t& output, int id);
     void pan_output(int32_t& input, int32_t& left, int32_t& right);
 
     void generate_sample_PCM8();
     void generate_sample_PCM16();
     void generate_sample_ADPCM();
+    void generate_sample_PSG();
 };
 
 class SPU
 {
     public:
-        constexpr static int SAMPLE_BUFFER_SIZE = 1024 * 2;
+        constexpr static int SAMPLE_BUFFER_SIZE = 2048 * 2;
     private:
         Emulator* e;
         int cycle_diff;

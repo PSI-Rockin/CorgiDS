@@ -9,6 +9,8 @@
 #include "emulator.hpp"
 #include "spu.hpp"
 
+const int volume_shift[4] = {4, 3, 2, 0};
+
 const int ADPCM_indexes[8] = {-1, -1, -1, -1, 2, 4, 6, 8};
 
 const uint16_t ADPCM_samples[89] =
@@ -27,6 +29,18 @@ const uint16_t ADPCM_samples[89] =
     0x7FFF
 };
 
+const int16_t PSG_samples[8][8] =
+{
+    {-0x7FFF, -0x7FFF, -0x7FFF, -0x7FFF, -0x7FFF, -0x7FFF, -0x7FFF,  0x7FFF},
+    {-0x7FFF, -0x7FFF, -0x7FFF, -0x7FFF, -0x7FFF, -0x7FFF,  0x7FFF,  0x7FFF},
+    {-0x7FFF, -0x7FFF, -0x7FFF, -0x7FFF, -0x7FFF,  0x7FFF,  0x7FFF,  0x7FFF},
+    {-0x7FFF, -0x7FFF, -0x7FFF, -0x7FFF,  0x7FFF,  0x7FFF,  0x7FFF,  0x7FFF},
+    {-0x7FFF, -0x7FFF, -0x7FFF,  0x7FFF,  0x7FFF,  0x7FFF,  0x7FFF,  0x7FFF},
+    {-0x7FFF, -0x7FFF,  0x7FFF,  0x7FFF,  0x7FFF,  0x7FFF,  0x7FFF,  0x7FFF},
+    {-0x7FFF,  0x7FFF,  0x7FFF,  0x7FFF,  0x7FFF,  0x7FFF,  0x7FFF,  0x7FFF},
+    {-0x7FFF, -0x7FFF, -0x7FFF, -0x7FFF, -0x7FFF, -0x7FFF, -0x7FFF, -0x7FFF}
+};
+
 void SoundChannel::start()
 {
     timer = SOUND_TIMER;
@@ -40,8 +54,9 @@ void SoundChannel::start()
         current_position = -3;
 }
 
-void SoundChannel::run(int32_t& output)
+void SoundChannel::run(int32_t& output, int id)
 {
+    output = 0;
     timer += 512; //512 cycles per sample; SPU runs at half ARM7 clock speed, so ~16 MHz
     while (timer >> 16)
     {
@@ -57,6 +72,11 @@ void SoundChannel::run(int32_t& output)
             case 2:
                 generate_sample_ADPCM();
                 break;
+            case 3:
+                if (id >= 8 && id <= 13)
+                    generate_sample_PSG();
+
+                break;
             default:
                 printf("\nUnrecognized sound format %d", CNT.format);
                 break;
@@ -64,13 +84,14 @@ void SoundChannel::run(int32_t& output)
     }
 
     int32_t final_sample = (int32_t)current_sample;
+    final_sample <<= volume_shift[CNT.divider];
     final_sample *= CNT.volume + ((CNT.volume & 0x7F) == 0x7F);
     output = final_sample;
 }
 
 void SoundChannel::pan_output(int32_t &input, int32_t &left, int32_t &right)
 {
-    int64_t bark = (int32_t)input;
+    int64_t bark = (int64_t)(int32_t)input;
 
     left += (bark * (128 - CNT.panning)) >> 10;
     right += (bark * CNT.panning) >> 10;
@@ -125,15 +146,25 @@ void SoundChannel::generate_sample_ADPCM()
         {
             //Load header
             uint32_t header = e->arm7_read_word(SOUND_SOURCE);
-            ADPCM_sample = (int16_t)(header & 0xFFFF);
+            ADPCM_sample = header & 0xFFFF;
             ADPCM_index = (header >> 16) & 0xFF;
+            if (ADPCM_index > 88)
+                ADPCM_index = 88;
+
+            ADPCM_sample_loop = ADPCM_sample;
+            ADPCM_index_loop = ADPCM_index;
         }
+        return;
     }
 
     if ((current_position / 2) >= SOUND_PNT + SOUND_LEN)
     {
         if (CNT.repeat_mode == 1)
+        {
+            ADPCM_sample = ADPCM_sample_loop;
+            ADPCM_index = ADPCM_index_loop;
             current_position = SOUND_PNT * 2;
+        }
         else if (CNT.repeat_mode == 2)
         {
             current_sample = 0;
@@ -159,14 +190,14 @@ void SoundChannel::generate_sample_ADPCM()
         if (ADPCM_byte & 0x8)
         {
             ADPCM_sample -= diff;
-            if (ADPCM_value < -0x7FFF)
-                ADPCM_value = -0x7FFF;
+            if (ADPCM_sample < -0x7FFF)
+                ADPCM_sample = -0x7FFF;
         }
         else
         {
             ADPCM_sample += diff;
-            if (ADPCM_value > 0x7FFF)
-                ADPCM_value = 0x7FFF;
+            if (ADPCM_sample > 0x7FFF)
+                ADPCM_sample = 0x7FFF;
         }
 
         ADPCM_index += ADPCM_indexes[ADPCM_byte & 0x7];
@@ -174,9 +205,21 @@ void SoundChannel::generate_sample_ADPCM()
             ADPCM_index = 0;
         if (ADPCM_index > 88)
             ADPCM_index = 88;
+
+        if ((current_position / 2) == SOUND_PNT)
+        {
+            ADPCM_sample_loop = ADPCM_sample;
+            ADPCM_index_loop = ADPCM_index;
+        }
     }
 
     current_sample = ADPCM_sample;
+}
+
+void SoundChannel::generate_sample_PSG()
+{
+    current_position++;
+    current_sample = PSG_samples[CNT.wave_duty][current_position & 0x7];
 }
 
 SPU::SPU(Emulator *e) : e(e)
@@ -202,6 +245,11 @@ void SPU::power_on()
     {
         channels[i].CNT.busy = false;
         channels[i].CNT.volume = 0;
+        channels[i].timer = 0;
+        channels[i].SOUND_TIMER = 0;
+        channels[i].SOUND_LEN = 0;
+        channels[i].SOUND_PNT = 0;
+        channels[i].SOUND_SOURCE = 0;
     }
 }
 
@@ -209,8 +257,10 @@ void SPU::generate_sample(uint64_t cycles)
 {
     if (SOUNDCNT.master_enable && samples < SAMPLE_BUFFER_SIZE * 2)
     {
-        int32_t channel_buffer, left_sample = 0, right_sample = 0;
+        int32_t channel_buffer = 0, left_sample = 0, right_sample = 0;
         cycle_diff += cycles;
+
+        //Generate one sample for every 1024 ARM7 cycles
         while (cycle_diff >= 1024)
         {
             cycle_diff -= 1024;
@@ -218,7 +268,7 @@ void SPU::generate_sample(uint64_t cycles)
             {
                 if (channels[i].CNT.busy)
                 {
-                    channels[i].run(channel_buffer);
+                    channels[i].run(channel_buffer, i);
                     channels[i].pan_output(channel_buffer, left_sample, right_sample);
                 }
             }
@@ -238,8 +288,8 @@ void SPU::generate_sample(uint64_t cycles)
             if (right_sample > 0x7FFF)
                 right_sample = 0x7FFF;
 
-            sample_buffer[samples] = left_sample;
-            sample_buffer[samples + 1] = right_sample;
+            sample_buffer[samples] = left_sample >> 1;
+            sample_buffer[samples + 1] = right_sample >> 1;
 
             samples += 2;
         }
@@ -248,12 +298,7 @@ void SPU::generate_sample(uint64_t cycles)
 
 int SPU::output_buffer(int16_t *data)
 {
-    //printf("\nSamples: %d", samples);
-    for (int s = 0; s < samples; s += 2)
-    {
-        data[s] = sample_buffer[s];
-        data[s + 1] = sample_buffer[s + 1];
-    }
+    memcpy(data, sample_buffer, samples * sizeof(int16_t));
     int samples_out = samples;
     samples = 0;
     return samples_out;
@@ -398,7 +443,7 @@ void SPU::write_channel_halfword(uint32_t address, uint16_t halfword)
             channels[i].SOUND_TIMER = halfword;
             break;
         case 0xA:
-            channels[i].SOUND_PNT = halfword;
+            channels[i].SOUND_PNT = halfword * 4;
             break;
     }
     if (halfword)
@@ -423,10 +468,10 @@ void SPU::write_channel_word(uint32_t address, uint32_t word)
             channels[i].CNT.busy = word & (1 << 31);
             break;
         case 0x4:
-            channels[i].SOUND_SOURCE = word & ~0xF8000003;
+            channels[i].SOUND_SOURCE = word & 0x07FFFFFC;
             break;
         case 0xC:
-            channels[i].SOUND_LEN = word & 0x3FFFFF;
+            channels[i].SOUND_LEN = (word & 0x1FFFFF) * 4;
             break;
     }
     if (word)
