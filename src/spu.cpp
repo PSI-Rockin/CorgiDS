@@ -6,6 +6,7 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include "emulator.hpp"
 #include "spu.hpp"
 
@@ -45,6 +46,7 @@ void SoundChannel::start()
 {
     timer = SOUND_TIMER;
     current_sample = 0;
+    white_noise = 0x7FFF;
 
     //One sample delay for PSG/Noise, three for PCM/ADPCM
     //ADPCM technically has eleven sample delay, due to header
@@ -75,7 +77,8 @@ void SoundChannel::run(int32_t& output, int id)
             case 3:
                 if (id >= 8 && id <= 13)
                     generate_sample_PSG();
-
+                if (id >= 14)
+                    generate_sample_noise();
                 break;
             default:
                 printf("\nUnrecognized sound format %d", CNT.format);
@@ -220,6 +223,19 @@ void SoundChannel::generate_sample_PSG()
 {
     current_position++;
     current_sample = PSG_samples[CNT.wave_duty][current_position & 0x7];
+}
+
+void SoundChannel::generate_sample_noise()
+{
+    bool carry = white_noise & 0x1;
+    white_noise >>= 1;
+    if (carry)
+    {
+        white_noise ^= 0x6000;
+        current_sample = -0x7FFF;
+    }
+    else
+        current_sample = 0x7FFF;
 }
 
 SPU::SPU(Emulator *e) : e(e)

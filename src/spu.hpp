@@ -60,6 +60,8 @@ struct SoundChannel
     int32_t ADPCM_sample, ADPCM_sample_loop;
     int32_t ADPCM_index, ADPCM_index_loop;
 
+    uint16_t white_noise;
+
     void start();
     void run(int32_t& output, int id);
     void pan_output(int32_t& input, int32_t& left, int32_t& right);
@@ -68,6 +70,7 @@ struct SoundChannel
     void generate_sample_PCM16();
     void generate_sample_ADPCM();
     void generate_sample_PSG();
+    void generate_sample_noise();
 };
 
 class SPU
