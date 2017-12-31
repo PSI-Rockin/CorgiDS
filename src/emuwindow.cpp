@@ -10,6 +10,7 @@
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QPainter>
+#include <cstdio>
 #include "config.hpp"
 #include "emuwindow.hpp"
 
@@ -80,7 +81,8 @@ int EmuWindow::initialize()
         printf("Audio format supported\n");
 
     audio = new QAudioOutput(burp, nullptr);
-    audio->start(&spu_audio);
+    connect(audio, SIGNAL(stateChanged(QAudio::State)), this, SLOT(handle_audio_state(QAudio::State)));
+    //audio->start(&spu_audio);
 
     connect(this, SIGNAL(shutdown()), &emuthread, SLOT(shutdown()));
     connect(&emuthread, SIGNAL(finished_frame(uint32_t*,uint32_t*)), this, SLOT(draw_frame(uint32_t*,uint32_t*)));
@@ -187,6 +189,10 @@ void EmuWindow::keyPressEvent(QKeyEvent *event)
             break;
         case Qt::Key_P:
             emuthread.manual_pause();
+            if (audio->state() == QAudio::ActiveState)
+                audio->stop();
+            else
+                audio->start(&spu_audio);
             break;
         case Qt::Key_Up:
             emit press_key(BUTTON_UP);
@@ -276,6 +282,7 @@ void EmuWindow::keyReleaseEvent(QKeyEvent *event)
 
 void EmuWindow::load_ROM()
 {
+    audio->stop();
     emuthread.pause(PAUSE_EVENT::LOADING_ROM);
     if (emuthread.load_firmware())
     {
@@ -294,13 +301,16 @@ void EmuWindow::load_ROM()
             emuthread.unpause(PAUSE_EVENT::LOADING_ROM);
             return;
         }
+        spu_audio.clear_buffer();
         Config::frameskip = 0;
         Config::hle_bios = false;
         Config::enable_framelimiter = true;
         emuthread.unpause(PAUSE_EVENT::GAME_NOT_STARTED);
         emuthread.unpause(PAUSE_EVENT::LOADING_ROM);
+
         //e.debug();
     }
+    audio->start(&spu_audio);
 }
 
 void EmuWindow::about()
@@ -325,4 +335,48 @@ void EmuWindow::screenshot()
         render(&image, QPoint(), QRegion(widget));
         image.save(screenshot_path);
     }
+}
+
+void EmuWindow::handle_audio_state(QAudio::State state)
+{
+    /*switch (state)
+    {
+        case QAudio::ActiveState:
+            printf("\nAudio started");
+            break;
+        case QAudio::IdleState:
+            printf("\nAudio idle");
+            break;
+        case QAudio::StoppedState:
+            printf("\nAudio stopped");
+            break;
+        case QAudio::SuspendedState:
+            printf("\nAudio suspended");
+            break;
+        default:
+            printf("\nSomething weird happened to audio");
+            break;
+    }
+    if (audio->error() != QAudio::NoError)
+    {
+        printf("\nAn audio error occurred!");
+        switch (audio->error())
+        {
+            case QAudio::OpenError:
+                printf("\nOpen error!");
+                break;
+            case QAudio::IOError:
+                printf("\nIO error!");
+                break;
+            case QAudio::UnderrunError:
+                printf("\nUnderrun error!");
+                break;
+            case QAudio::FatalError:
+                printf("\nFatal error!");
+                break;
+            default:
+                printf("\nSome other error!");
+                break;
+        }
+    }*/
 }

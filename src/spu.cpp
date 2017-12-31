@@ -10,6 +10,8 @@
 #include "emulator.hpp"
 #include "spu.hpp"
 
+#define printf(fmt, ...)(0)
+
 const int volume_shift[4] = {4, 3, 2, 0};
 
 const int ADPCM_indexes[8] = {-1, -1, -1, -1, 2, 4, 6, 8};
@@ -271,7 +273,7 @@ void SPU::power_on()
 
 void SPU::generate_sample(uint64_t cycles)
 {
-    if (SOUNDCNT.master_enable && samples < SAMPLE_BUFFER_SIZE * 2)
+    if (SOUNDCNT.master_enable && samples < SAMPLE_BUFFER_SIZE)
     {
         int32_t channel_buffer = 0, left_sample = 0, right_sample = 0;
         cycle_diff += cycles;
@@ -314,7 +316,9 @@ void SPU::generate_sample(uint64_t cycles)
 
 int SPU::output_buffer(int16_t *data)
 {
-    memcpy(data, sample_buffer, samples * sizeof(int16_t));
+    for (int i = 0; i < samples; i++)
+        data[i] = sample_buffer[i];
+    //memcpy(data, sample_buffer, samples * sizeof(int16_t));
     int samples_out = samples;
     samples = 0;
     return samples_out;

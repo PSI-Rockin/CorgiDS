@@ -85,7 +85,7 @@ class SPU
         SNDCAPTURE SNDCAP0, SNDCAP1;
         uint16_t SOUNDBIAS;
 
-        int16_t sample_buffer[SAMPLE_BUFFER_SIZE * 2];
+        int16_t sample_buffer[SAMPLE_BUFFER_SIZE];
         int samples;
     public:
         SPU(Emulator* e);

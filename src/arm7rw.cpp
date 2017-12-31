@@ -32,6 +32,8 @@ uint32_t Emulator::arm7_read_word(uint32_t address)
             return dma.read_len(7) | dma.read_CNT(7) << 16;
         case 0x04000120:
             return 0;
+        case 0x04000130:
+            return KEYINPUT.get();
         case 0x04000180:
             return IPCSYNC_NDS7.read();
         case 0x040001A4:
@@ -220,6 +222,8 @@ uint8_t Emulator::arm7_read_byte(uint32_t address)
     }
     switch (address)
     {
+        case 0x04000130:
+            return KEYINPUT.get() & 0xFF;
         case 0x04000138:
             return rtc.read();
         case 0x040001C2:

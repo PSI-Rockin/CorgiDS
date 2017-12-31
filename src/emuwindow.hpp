@@ -75,6 +75,7 @@ class EmuWindow : public QMainWindow
         void load_ROM();
         void preferences();
         void screenshot();
+        void handle_audio_state(QAudio::State);
 };
 
 #endif // EMUWINDOW_HPP
