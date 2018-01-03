@@ -81,17 +81,19 @@ struct Vertex
 {
     int32_t coords[4];
     int32_t colors[3];
-
+    int32_t texcoords[2];
+    int32_t final_pos[2];
     int32_t final_colors[3];
     bool clipped;
-
-    int32_t texcoords[2];
 };
 
 struct Polygon
 {
-    uint16_t vert_index;
-    uint8_t vertices;
+    Vertex* vertices[10];
+    uint8_t vert_count;
+
+    int32_t final_z[10];
+    int32_t final_w[10];
 
     uint16_t top_y, bottom_y;
 
@@ -100,6 +102,8 @@ struct Polygon
     uint32_t palette_base;
 
     bool translucent;
+
+
 };
 
 struct GX_Command
@@ -152,8 +156,14 @@ class GPU_3D
         static const uint8_t cmd_param_amounts[256];
         static const uint16_t cmd_cycle_amounts[256];
 
-        Vertex geo_vert[6188], rend_vert[6188];
-        Polygon geo_poly[2048], rend_poly[2048];
+        //Dynamically allocated vertex/polygon RAM banks
+        Vertex *vert_bank1, *vert_bank2;
+        Polygon *poly_bank1, *poly_bank2;
+
+        //Pointers to the RAM banks
+        Vertex* geo_vert, *rend_vert;
+        Polygon* geo_poly, *rend_poly;
+
         Polygon* last_poly_strip;
 
         Vertex vertex_list[10];
@@ -174,7 +184,7 @@ class GPU_3D
         MTX vector_stack[0x20];
         MTX clip_mtx;
         bool clip_dirty;
-        uint8_t modelview_sp;
+        uint8_t projection_sp, modelview_sp;
 
         uint16_t emission_color, ambient_color, diffuse_color, specular_color;
         uint16_t light_color[4];
@@ -211,6 +221,7 @@ class GPU_3D
         void request_FIFO_DMA();
     public:
         GPU_3D(Emulator* e, GPU* gpu);
+        ~GPU_3D();
         void power_on();
         void render_scanline(uint32_t* framebuffer, uint8_t bg_priorities[256], uint8_t bg0_priority);
         void run(uint64_t cycles_to_run);

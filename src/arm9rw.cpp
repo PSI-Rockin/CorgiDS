@@ -92,6 +92,8 @@ uint32_t Emulator::arm9_read_word(uint32_t address)
             return SQRT_PARAM & 0xFFFFFFFF;
         case 0x040002BC:
             return SQRT_PARAM >> 32;
+        case 0x040004A4:
+            return 0; //POLYGON_ATTR is unreadable but games will spam the console without this
         case 0x04000600:
             return gpu.get_GXSTAT();
         case 0x04000604:
