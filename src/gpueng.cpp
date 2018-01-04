@@ -715,12 +715,12 @@ void GPU_2D_Engine::draw_sprites()
     };
     for (int bg = 3; bg >= 0; bg--)
     {
-        for (int i = 127; i >= 0; i--)
+        for (int obj = 127; obj >= 0; obj--)
         {
-            attributes[0] = gpu->read_OAM<uint16_t>(OAM_base + (i * 8));
-            attributes[1] = gpu->read_OAM<uint16_t>(OAM_base + (i * 8) + 2);
-            attributes[2] = gpu->read_OAM<uint16_t>(OAM_base + (i * 8) + 4);
-            attributes[3] = gpu->read_OAM<uint16_t>(OAM_base + (i * 8) + 6);
+            attributes[0] = gpu->read_OAM<uint16_t>(OAM_base + (obj * 8));
+            attributes[1] = gpu->read_OAM<uint16_t>(OAM_base + (obj * 8) + 2);
+            attributes[2] = gpu->read_OAM<uint16_t>(OAM_base + (obj * 8) + 4);
+            attributes[3] = gpu->read_OAM<uint16_t>(OAM_base + (obj * 8) + 6);
 
             int priority = (attributes[2] >> 10) & 0x3;
             if (priority != bg)

@@ -140,6 +140,8 @@ uint32_t Emulator::arm9_read_word(uint32_t address)
         return gpu.read_bga<uint32_t>(address);
     if (address >= VRAM_BGB_START && address < VRAM_OBJA_START)
         return gpu.read_bgb<uint32_t>(address);
+    if (address >= VRAM_OBJA_START && address < VRAM_OBJB_START)
+        return gpu.read_obja<uint32_t>(address);
     if (address >= VRAM_LCDC_A && address < VRAM_LCDC_END)
         return gpu.read_lcdc<uint32_t>(address);
     if (address >= OAM_START && address < GBA_ROM_START)
@@ -637,6 +639,7 @@ void Emulator::arm9_write_word(uint32_t address, uint32_t word)
             return;
         case 0x04000358:
             //TODO: FOG_COLOR
+            gpu.set_FOG_COLOR(word);
             return;
         case 0x04000600:
             gpu.set_GXSTAT(word);
@@ -735,9 +738,12 @@ void Emulator::arm9_write_word(uint32_t address, uint32_t word)
     //TODO: EDGE_COLOR
     if (address >= 0x04000330 && address < 0x04000340)
         return;
-    //TODO: FOG_TABLE
     if (address >= 0x04000360 && address < 0x04000380)
+    {
+        for (int i = 0; i < 4; i++)
+            gpu.set_FOG_TABLE(address + i, (word >> (i * 8)) & 0xFF);
         return;
+    }
     if (address >= 0x04000380 && address < 0x040003C0)
     {
         gpu.set_TOON_TABLE((address & 0x3F) >> 1, word & 0xFFFF);
@@ -1085,7 +1091,7 @@ void Emulator::arm9_write_halfword(uint32_t address, uint16_t halfword)
             //TODO: CLRIMAGE_OFFSET
             return;
         case 0x0400035C:
-            //TODO: FOG_OFFSET
+            gpu.set_FOG_OFFSET(halfword);
             return;
         case 0x04001000:
             gpu.set_DISPCNT_B_lo(halfword);

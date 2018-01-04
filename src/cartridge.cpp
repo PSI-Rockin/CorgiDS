@@ -195,7 +195,18 @@ int NDS_Cart::load_ROM(string file_name)
         int file_size = get_file_size(ROM_name + ".sav");
         if (file_size)
         {
+            static const int save_sizes[7] =
+                {512, 1024 * 8, 1024 * 64, 1024 * 256, 1024 * 512, 1024 * 1024, 1024 * 1024 * 8};
             save_file.read((char*)SPI_save, file_size);
+            //Round save size up to the closest option
+            for (int i = 0; i < 6; i++)
+            {
+                if (file_size > save_sizes[i] && file_size <= save_sizes[i + 1])
+                {
+                    file_size = save_sizes[i + 1];
+                    break;
+                }
+            }
             save_size = file_size;
             printf("Loaded save for %s successfully.\n", ROM_name.c_str());
             printf("Save size: %d\n", save_size);
@@ -504,7 +515,6 @@ void NDS_Cart::set_AUXSPIDATA(uint8_t value)
                 break;
             default:
                 printf("\nUnrecognized AUXSPI cmd %d", value);
-                exit(1);
         }
     }
     else
@@ -651,8 +661,6 @@ void NDS_Cart::set_AUXSPIDATA(uint8_t value)
                         spi_addr = 0x100;
                 }
                 break;
-            default:
-                exit(1);
         }
     }
     spi_params++;

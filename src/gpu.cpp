@@ -217,8 +217,6 @@ uint16_t GPU::read_extpal_bgb(uint32_t address)
     {
         if (ADDR_IN_RANGE(0, VRAM_H_SIZE) && VRAMCNT_H.MST == 2)
             reg |= *(uint16_t*)&VRAM_H[address & VRAM_H_MASK];
-        else
-            exit(1);
     }
     return reg;
 }
@@ -272,14 +270,14 @@ void GPU::write_bga(uint32_t address, uint16_t halfword)
         if (VRAMCNT_E.enabled)
             *(uint16_t*)&VRAM_E[address & VRAM_E_MASK] = halfword;
     }
-    uint32_t f_offset = (VRAMCNT_F.offset & 0x1) * 0x4000 + (VRAMCNT_F.offset & 0x2) * 0x10000;
-    if (ADDR_IN_RANGE(VRAM_BGA_START, f_offset) && VRAMCNT_F.MST == 1)
+    uint32_t f_offset = (VRAMCNT_F.offset & 0x1) * 0x4000 + (VRAMCNT_F.offset & 0x2) * 0x8000;
+    if (ADDR_IN_RANGE(VRAM_BGA_START + f_offset, VRAM_F_SIZE) && VRAMCNT_F.MST == 1)
     {
         if (VRAMCNT_F.enabled)
             *(uint16_t*)&VRAM_F[address & VRAM_F_MASK] = halfword;
     }
-    uint32_t g_offset = (VRAMCNT_G.offset & 0x1) * 0x4000 + (VRAMCNT_G.offset & 0x2) * 0x10000;
-    if (ADDR_IN_RANGE(VRAM_BGA_START, g_offset) && VRAMCNT_G.MST == 1)
+    uint32_t g_offset = (VRAMCNT_G.offset & 0x1) * 0x4000 + (VRAMCNT_G.offset & 0x2) * 0x8000;
+    if (ADDR_IN_RANGE(VRAM_BGA_START + g_offset, VRAM_G_SIZE) && VRAMCNT_G.MST == 1)
     {
         if (VRAMCNT_G.enabled)
             *(uint16_t*)&VRAM_G[address & VRAM_G_MASK] = halfword;
@@ -324,14 +322,14 @@ void GPU::write_obja(uint32_t address, uint16_t halfword)
         if (VRAMCNT_E.enabled)
             *(uint16_t*)&VRAM_E[address & VRAM_E_MASK] = halfword;
     }
-    uint32_t f_offset = (VRAMCNT_F.offset & 0x1) * 0x4000 + (VRAMCNT_F.offset & 0x2) * 0x10000;
-    if (ADDR_IN_RANGE(VRAM_OBJA_START, f_offset) && VRAMCNT_F.MST == 2)
+    uint32_t f_offset = (VRAMCNT_F.offset & 0x1) * 0x4000 + (VRAMCNT_F.offset & 0x2) * 0x8000;
+    if (ADDR_IN_RANGE(VRAM_OBJA_START + f_offset, VRAM_F_SIZE) && VRAMCNT_F.MST == 2)
     {
         if (VRAMCNT_F.enabled)
             *(uint16_t*)&VRAM_F[address & VRAM_F_MASK] = halfword;
     }
-    uint32_t g_offset = (VRAMCNT_G.offset & 0x1) * 0x4000 + (VRAMCNT_G.offset & 0x2) * 0x10000;
-    if (ADDR_IN_RANGE(VRAM_OBJA_START, g_offset) && VRAMCNT_G.MST == 2)
+    uint32_t g_offset = (VRAMCNT_G.offset & 0x1) * 0x4000 + (VRAMCNT_G.offset & 0x2) * 0x8000;
+    if (ADDR_IN_RANGE(VRAM_OBJA_START + g_offset, VRAM_G_SIZE) && VRAMCNT_G.MST == 2)
     {
         if (VRAMCNT_G.enabled)
             *(uint16_t*)&VRAM_G[address & VRAM_G_MASK] = halfword;
@@ -989,6 +987,21 @@ void GPU::set_CLEAR_COLOR(uint32_t word)
 void GPU::set_CLEAR_DEPTH(uint32_t word)
 {
     eng_3D.set_CLEAR_DEPTH(word);
+}
+
+void GPU::set_FOG_COLOR(uint32_t word)
+{
+    eng_3D.set_FOG_COLOR(word);
+}
+
+void GPU::set_FOG_OFFSET(uint16_t halfword)
+{
+    eng_3D.set_FOG_OFFSET(halfword);
+}
+
+void GPU::set_FOG_TABLE(uint32_t address, uint8_t byte)
+{
+    eng_3D.set_FOG_TABLE(address, byte);
 }
 
 void GPU::set_MTX_MODE(uint32_t word)

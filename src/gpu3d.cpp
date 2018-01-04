@@ -155,11 +155,12 @@ void GPU_3D::render_scanline(uint32_t* framebuffer, uint8_t bg_priorities[256], 
     //Draw the rear-plane
     //X=(X*200h)+((X+1)/8000h)*1FFh
     uint32_t rear_z = (CLEAR_DEPTH * 0x200) + ((CLEAR_DEPTH + 1) / 0x8000) * 0x1FF;
-
+    bool rear_plane_fog = CLEAR_COLOR & (1 << 15);
     for (int i = 0; i < PIXELS_PER_LINE; i++)
     {
         z_buffer[line][i] = rear_z;
         trans_poly_ids[i] = 0xFF;
+        fog_flags[i] = rear_plane_fog;
     }
     int y_coord = line * PIXELS_PER_LINE;
     for (int i = 0; i < rend_poly_count; i++)
@@ -666,6 +667,7 @@ void GPU_3D::render_scanline(uint32_t* framebuffer, uint8_t bg_priorities[256], 
             switch (current_poly->attributes.polygon_mode)
             {
                 case 0:
+                case 3:
                     r = (((tr + 1) * (vr + 1) - 1) / 64) << 2;
                     g = (((tg + 1) * (vg + 1) - 1) / 64) << 2;
                     b = (((tb + 1) * (vb + 1) - 1) / 64) << 2;
@@ -732,6 +734,50 @@ void GPU_3D::render_scanline(uint32_t* framebuffer, uint8_t bg_priorities[256], 
 
             framebuffer[x + y_coord] = 0xFF000000 + final_color;
             bg_priorities[x] = bg0_priority;
+            fog_flags[x] = current_poly->attributes.fog_enable;
+        }
+    }
+    if (DISP3DCNT.fog_enable)
+    {
+        int y = (line * PIXELS_PER_LINE);
+        for (int i = 0; i < PIXELS_PER_LINE; i++)
+        {
+            if (fog_flags[i])
+            {
+                uint32_t z = z_buffer[line][i];
+                uint8_t density;
+                if (z < FOG_OFFSET)
+                {
+                    density = 0;
+                }
+                else
+                {
+                    //TODO: linearly interpolate density
+                    z -= FOG_OFFSET;
+                    int depth_boundary = (z >> 2);
+                    depth_boundary <<= DISP3DCNT.fog_depth_shift;
+                    depth_boundary >>= 17;
+                    if (depth_boundary > 31)
+                        depth_boundary = 31;
+                    density = FOG_TABLE[depth_boundary];
+                    density += (density == 0x7F); //0x7F gets treated as 0x80
+                }
+                if (!DISP3DCNT.fog_alpha_only)
+                {
+                    uint32_t new_color = 0xFF000000;
+                    int fog_r = (FOG_COLOR & 0x1F) << 3;
+                    int fog_g = ((FOG_COLOR >> 5) & 0x1F) << 3;
+                    int fog_b = ((FOG_COLOR >> 10) & 0x1F) << 3;
+                    int poly_r = (framebuffer[i + y] >> 16) & 0xFF;
+                    int poly_g = (framebuffer[i + y] >> 8) & 0xFF;
+                    int poly_b = framebuffer[i + y] & 0xFF;
+
+                    new_color |= ((fog_r * density + poly_r * (128 - density)) / 128) << 16;
+                    new_color |= ((fog_g * density + poly_g * (128 - density)) / 128) << 8;
+                    new_color |= ((fog_b * density + poly_b * (128 - density)) / 128);
+                    framebuffer[i + y] = new_color;
+                }
+            }
         }
     }
 }
@@ -1325,6 +1371,7 @@ void GPU_3D::exec_command()
         cmd_param_count = 0;
     }
 }
+#undef printf
 #endif
 
 void GPU_3D::add_mult_param(uint32_t word)
@@ -1642,7 +1689,7 @@ void GPU_3D::add_polygon()
         for (int c = 0; c < 3; c++)
         {
             v->final_colors[c] = v->colors[c] >> 12;
-            if (v->colors[c])
+            if (v->final_colors[c])
             {
                 v->final_colors[c] <<= 4;
                 v->final_colors[c] += 0xF;
@@ -1961,7 +2008,7 @@ uint16_t GPU_3D::get_DISP3DCNT()
     reg |= DISP3DCNT.alpha_blending << 3;
     reg |= DISP3DCNT.anti_aliasing << 4;
     reg |= DISP3DCNT.edge_marking << 5;
-    reg |= DISP3DCNT.fog_color_mode << 6;
+    reg |= DISP3DCNT.fog_alpha_only << 6;
     reg |= DISP3DCNT.fog_enable << 7;
     reg |= DISP3DCNT.fog_depth_shift << 8;
     reg |= DISP3DCNT.color_buffer_underflow << 12;
@@ -2027,7 +2074,7 @@ void GPU_3D::set_DISP3DCNT(uint16_t halfword)
     DISP3DCNT.alpha_blending = halfword & (1 << 3);
     DISP3DCNT.anti_aliasing = halfword & (1 << 4);
     DISP3DCNT.edge_marking = halfword & (1 << 5);
-    DISP3DCNT.fog_color_mode = halfword & (1 << 6);
+    DISP3DCNT.fog_alpha_only = halfword & (1 << 6);
     DISP3DCNT.fog_enable = halfword & (1 << 7);
     DISP3DCNT.fog_depth_shift = (halfword >> 8) & 0xF;
 
@@ -2047,6 +2094,25 @@ void GPU_3D::set_CLEAR_DEPTH(uint32_t word)
 {
     printf("\nSet CLEAR_DEPTH: $%08X", word);
     CLEAR_DEPTH = word & 0x7FFF;
+}
+
+void GPU_3D::set_FOG_COLOR(uint32_t word)
+{
+    printf("\nSet FOG_COLOR: $%08X", word);
+    FOG_COLOR = word;
+}
+
+void GPU_3D::set_FOG_OFFSET(uint16_t halfword)
+{
+    printf("\nSet FOG_OFFSET: $%04X", halfword);
+    FOG_OFFSET = halfword;
+}
+
+void GPU_3D::set_FOG_TABLE(uint32_t address, uint8_t byte)
+{
+    int i = address & 0x1F;
+    printf("\nSet FOG_TABLE: $%02X ($%02X)", byte, i);
+    FOG_TABLE[i] = byte;
 }
 
 void GPU_3D::set_MTX_MODE(uint32_t word)
@@ -2364,6 +2430,9 @@ void GPU_3D::BOX_TEST()
     coords1[1] = (int16_t)(cmd_params[2] & 0xFFFF);
     coords1[2] = (int16_t)(cmd_params[2] >> 16);
 
+    for (int i = 0; i < 3; i++)
+        coords1[i] += coords0[i];
+
     cube[0].coords[0] = coords0[0]; cube[0].coords[1] = coords0[1]; cube[0].coords[2] = coords0[2];
     cube[1].coords[0] = coords1[0]; cube[1].coords[1] = coords0[1]; cube[1].coords[2] = coords0[2];
     cube[2].coords[0] = coords1[0]; cube[2].coords[1] = coords1[1]; cube[2].coords[2] = coords0[2];
@@ -2377,17 +2446,17 @@ void GPU_3D::BOX_TEST()
 
     for (int i = 0; i < 8; i++)
     {
-        int32_t x = cube[i].coords[0];
-        int32_t y = cube[i].coords[1];
-        int32_t z = cube[i].coords[2];
+        int64_t x = cube[i].coords[0];
+        int64_t y = cube[i].coords[1];
+        int64_t z = cube[i].coords[2];
 
         cube[i].coords[0] = (x * clip_mtx.m[0][0] + y * clip_mtx.m[1][0] +
                 z * clip_mtx.m[2][0] + 0x1000 * clip_mtx.m[3][0]) >> 12;
-        cube[i].coords[1] = (x*clip_mtx.m[0][1] + y * clip_mtx.m[1][1] +
+        cube[i].coords[1] = (x * clip_mtx.m[0][1] + y * clip_mtx.m[1][1] +
                 z * clip_mtx.m[2][1] + 0x1000 * clip_mtx.m[3][1]) >> 12;
-        cube[i].coords[2] = (x*clip_mtx.m[0][2] + y * clip_mtx.m[1][2] +
+        cube[i].coords[2] = (x * clip_mtx.m[0][2] + y * clip_mtx.m[1][2] +
                 z * clip_mtx.m[2][2] + 0x1000 * clip_mtx.m[3][2]) >> 12;
-        cube[i].coords[3] = (x*clip_mtx.m[0][3] + y * clip_mtx.m[1][3] +
+        cube[i].coords[3] = (x * clip_mtx.m[0][3] + y * clip_mtx.m[1][3] +
                 z * clip_mtx.m[2][3] + 0x1000 * clip_mtx.m[3][3]) >> 12;
     }
 

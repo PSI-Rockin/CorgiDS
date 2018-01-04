@@ -44,7 +44,7 @@ void BIOS::cpu_set(ARM_CPU &cpu)
     if (cpu.get_id())
     {
         //Reject reads and writes to BIOS area
-        if (source < 0x4000 && dest < 0x4000)
+        if (source < 0x4000 || dest < 0x4000)
             return;
     }
 

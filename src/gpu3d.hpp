@@ -18,7 +18,7 @@ struct DISP3DCNT_REG
     bool alpha_blending;
     bool anti_aliasing;
     bool edge_marking;
-    bool fog_color_mode;
+    bool fog_alpha_only;
     bool fog_enable;
     int fog_depth_shift;
     bool color_buffer_underflow;
@@ -151,6 +151,11 @@ class GPU_3D
         uint32_t z_buffer[SCANLINES][PIXELS_PER_LINE];
         uint8_t trans_poly_ids[PIXELS_PER_LINE];
 
+        uint32_t FOG_COLOR;
+        uint16_t FOG_OFFSET;
+        uint8_t FOG_TABLE[32];
+        bool fog_flags[PIXELS_PER_LINE];
+
         bool swap_buffers;
 
         static const uint8_t cmd_param_amounts[256];
@@ -244,6 +249,9 @@ class GPU_3D
 
         void set_CLEAR_COLOR(uint32_t word);
         void set_CLEAR_DEPTH(uint32_t word);
+        void set_FOG_COLOR(uint32_t word);
+        void set_FOG_OFFSET(uint16_t halfword);
+        void set_FOG_TABLE(uint32_t address, uint8_t byte);
         void set_MTX_MODE(uint32_t word);
         void MTX_PUSH();
         void MTX_POP(uint32_t word);
