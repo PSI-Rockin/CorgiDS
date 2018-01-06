@@ -307,8 +307,6 @@ void EmuWindow::load_ROM()
         Config::enable_framelimiter = true;
         emuthread.unpause(PAUSE_EVENT::GAME_NOT_STARTED);
         emuthread.unpause(PAUSE_EVENT::LOADING_ROM);
-
-        //e.debug();
     }
     audio->start(&spu_audio);
 }

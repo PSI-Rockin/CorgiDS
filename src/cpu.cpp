@@ -49,11 +49,11 @@ void PSR_Flags::set(uint32_t value)
 ARM_CPU::ARM_CPU(Emulator* e, int id) : e(e), cp15(nullptr), cpu_id(id)
 {
     //Fill waitstates with dummy values to prevent bugs
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 16; i++)
     {
-        for (int j = 0; j < 5; j++)
+        for (int j = 0; j < 4; j++)
             code_waitstates[i][j] = 1;
-        for (int j = 0; j < 6; j++)
+        for (int j = 0; j < 4; j++)
             code_waitstates[i][j] = 1;
     }
     //Initialize waitstates based upon GBATek's info
@@ -391,7 +391,7 @@ void ARM_CPU::halt()
 void ARM_CPU::handle_SWI()
 {
     if (Config::hle_bios && e->hle_bios(cpu_id))
-        return; //If a HLE function is found, no need to go through the LLE stuff
+        return;
     uint32_t value = CPSR.get();
     SPSR[static_cast<int>(PSR_MODE::SUPERVISOR)].set(value);
     

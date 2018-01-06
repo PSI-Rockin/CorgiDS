@@ -51,6 +51,7 @@ class NDS_DMA
         void DMA_event(int index);
         void update_DMA(int index);
 
+        void activate_DMA(int index);
         void handle_event(SchedulerEvent& event);
 
         bool is_active(int cpu_id);
@@ -68,6 +69,8 @@ class NDS_DMA
         void HBLANK_request();
         void gamecart_request();
         void GXFIFO_request();
+
+
 };
 
 inline bool NDS_DMA::is_active(int cpu_id)

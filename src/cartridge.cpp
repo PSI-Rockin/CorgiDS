@@ -577,7 +577,7 @@ void NDS_Cart::set_AUXSPIDATA(uint8_t value)
                         spi_addr++;
                     }
                 }*/
-                printf("\nWRITE_MEM: %d", value);
+                //printf("\nWRITE_MEM: %d", value);
                 break;
             case AUXSPI_COMMAND::READ_MEM:
                 switch (save_type)
@@ -613,7 +613,7 @@ void NDS_Cart::set_AUXSPIDATA(uint8_t value)
                         }
                         break;
                 }
-                printf("\nREAD_MEM: %d", value);
+                //printf("\nREAD_MEM: %d", value);
                 break;
             case AUXSPI_COMMAND::PAGE_WRITE:
                 if (save_type == 2)
@@ -627,7 +627,7 @@ void NDS_Cart::set_AUXSPIDATA(uint8_t value)
                     {
                         if (spi_write_enabled)
                         {
-                            printf("\nPage write to $%08X", spi_addr);
+                            //printf("\nPage write to $%08X", spi_addr);
                             dirty_save = true;
                             SPI_save[spi_addr & (save_size - 1)] = value;
                             spi_addr++;
@@ -666,7 +666,7 @@ void NDS_Cart::set_AUXSPIDATA(uint8_t value)
     spi_params++;
     if (!AUXSPICNT.hold_chipselect)
     {
-        printf("\nDeselected AUXSPI");
+        //printf("\nDeselected AUXSPI");
         spi_params = 0;
         spi_addr = 0;
         spi_cmd = AUXSPI_COMMAND::EMPTY;

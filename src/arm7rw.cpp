@@ -515,7 +515,7 @@ void Emulator::arm7_write_halfword(uint32_t address, uint16_t halfword)
             cart.set_AUXSPICNT(halfword);
             return;
         case 0x040001A2:
-            printf("\nAUXSPIDATA: $%04X", halfword);
+            //printf("\nAUXSPIDATA: $%04X", halfword);
             cart.set_AUXSPIDATA(halfword & 0xFF);
             return;
         case 0x040001B8:

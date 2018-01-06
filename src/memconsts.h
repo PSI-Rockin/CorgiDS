@@ -8,6 +8,7 @@
 #define memconsts_h
 
 #define ADDR_IN_RANGE(x, s) address >= x && address < x + s
+#define MASKED_ADDR(x, s, m) address >= x && ((address + x) & m) < s
 
 //Memory addresses
 #define MAIN_RAM_START          0x02000000

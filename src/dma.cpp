@@ -51,6 +51,15 @@ void NDS_DMA::power_on()
     }
 }
 
+void NDS_DMA::activate_DMA(int index)
+{
+    //TODO: add proper scheduling infrastructure
+    active_DMAs |= (1 << index);
+    SchedulerEvent event;
+    event.id = index;
+    handle_event(event);
+}
+
 void NDS_DMA::handle_event(SchedulerEvent &event)
 {
     event.processing = false;
@@ -68,20 +77,16 @@ void NDS_DMA::handle_event(SchedulerEvent &event)
                     e->request_interrupt7(static_cast<INTERRUPT>(4 + active_DMA->index));
             }
             active_DMA->internal_len = 0;
+            active_DMAs &= ~(1 << event.id);
             if (!active_DMA->CNT.repeat)
             {
                 active_DMA->CNT.enabled = false;
-                active_DMAs &= ~(1 << event.id);
             }
             else
             {
                 //Reload dest
                 if (active_DMA->CNT.dest_control == 3)
                     active_DMA->internal_dest = active_DMA->destination;
-                if (active_DMA->CNT.timing != 0)
-                    active_DMAs &= ~(1 << event.id);
-                else
-                    e->add_DMA_event(event.id, active_DMA->length);
             }
             return;
         }
@@ -232,8 +237,7 @@ void NDS_DMA::write_CNT(int index, uint16_t CNT)
         if (dmas[index].CNT.timing == 0)
         {
             //printf("\nRunning immediately");
-            active_DMAs |= (1 << index);
-            e->add_DMA_event(index, 0);
+            activate_DMA(index);
         }
         else if (dmas[index].CNT.timing == 7)
         {
@@ -254,8 +258,7 @@ void NDS_DMA::HBLANK_request()
     {
         if (dmas[i].CNT.enabled && dmas[i].CNT.timing == 2 && !active_DMAs)
         {
-            active_DMAs |= (1 << i);
-            e->add_DMA_event(i, 0);
+            activate_DMA(i);
             break;
         }
     }
@@ -270,8 +273,7 @@ void NDS_DMA::gamecart_request()
         {
             if (dmas[i].CNT.enabled && dmas[i].CNT.timing == 4)
             {
-                active_DMAs |= (1 << i);
-                e->add_DMA_event(i, 0);
+                activate_DMA(i);
                 break;
             }
         }
@@ -282,8 +284,7 @@ void NDS_DMA::gamecart_request()
         {
             if (dmas[i].CNT.enabled && dmas[i].CNT.timing == 5)
             {
-                active_DMAs |= (1 << i);
-                e->add_DMA_event(i, 0);
+                activate_DMA(i);
                 break;
             }
         }
@@ -296,8 +297,7 @@ void NDS_DMA::GXFIFO_request()
     {
         if (dmas[i].CNT.enabled && dmas[i].CNT.timing == 7)
         {
-            active_DMAs |= (1 << i);
-            e->add_DMA_event(i, 0);
+            activate_DMA(i);
             break;
         }
     }

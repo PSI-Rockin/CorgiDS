@@ -4,27 +4,40 @@
     See LICENSE.txt for details
 */
 
-#include "cpuinstrs.hpp"
 #include <cstdio>
-
-#define printf(fmt, ...)(0)
+#include "config.hpp"
+#include "cpuinstrs.hpp"
+#include "disassembler.hpp"
 
 void Interpreter::thumb_interpret(ARM_CPU &cpu)
 {
     uint16_t instruction = cpu.get_current_instr() & 0xFFFF;
-    
-    if (cpu.get_id())
-    {
-        if (!cpu.get_id())
-            printf("(9T)");
-        else
-            printf("(7T)");
-        printf(" $%08X - ", cpu.get_PC() - 4);
 
-        printf("($%04X) ", instruction);
-    }
-    
     THUMB_INSTR opcode = thumb_decode(instruction);
+    
+    if (!cpu.get_id() && Config::test)
+    {
+        if (opcode != THUMB_INSTR::LONG_BLX && opcode != THUMB_INSTR::LONG_BRANCH)
+        {
+            printf("\n");
+            uint32_t PC = cpu.get_PC() - 4;
+            if (!cpu.get_id())
+                printf("(9T)");
+            else
+                printf("(7T)");
+            if (opcode == THUMB_INSTR::LONG_BRANCH_PREP)
+            {
+                uint32_t long_instr = instruction | (cpu.read_halfword(PC + 2) << 16);
+                printf("[$%08X] {$%08X} - ", PC, long_instr);
+                printf("%s", Disassembler::disasm_thumb_long_branch(cpu, long_instr).c_str());
+            }
+            else
+            {
+                printf("[$%08X] {$%04X} - ", PC, instruction);
+                printf("%s", Disassembler::disasm_thumb(cpu, instruction, PC).c_str());
+            }
+        }
+    }
     
     switch (opcode)
     {
@@ -122,10 +135,9 @@ void Interpreter::thumb_interpret(ARM_CPU &cpu)
             printf("\nUnrecognized Thumb opcode $%04X", cpu.get_current_instr());
             exit(1);
     }
-    
-    if (cpu.get_id())
-        printf("\n");
 }
+
+#define printf(fmt, ...)(0)
 
 THUMB_INSTR Interpreter::thumb_decode(uint32_t instruction)
 {

@@ -44,7 +44,8 @@ SOURCES += \
     ../src/armtable.cpp \
     ../src/emuthread.cpp \
     ../src/bios.cpp \
-    ../src/audiodevice.cpp
+    ../src/audiodevice.cpp \
+    ../src/disasm_thumb.cpp
 
 DEFINES += QT_DEPRECATED_WARNINGS
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000

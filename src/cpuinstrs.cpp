@@ -17,18 +17,17 @@ void Interpreter::arm_interpret(ARM_CPU &cpu)
 {
     uint32_t instruction = cpu.get_current_instr();
     int condition = (instruction & 0xF0000000) >> 28;
-
-    uint32_t PC = cpu.get_PC() - 8;
     
     if (!cpu.get_id() && Config::test)
     {
+        printf("\n");
+        uint32_t PC = cpu.get_PC() - 8;
         if (!cpu.get_id())
             printf("(9A)");
         else
             printf("(7A)");
-        printf("[$%08X] {$%08X} - ", cpu.get_PC() - 8, instruction);
-        printf(" %s", Disassembler::disasm_arm(cpu, instruction, cpu.get_PC() - 8).c_str());
-        printf("\n");
+        printf("[$%08X] {$%08X} - ", PC, instruction);
+        printf("%s", Disassembler::disasm_arm(cpu, instruction, PC).c_str());
     }
     
     uint32_t op = ((instruction >> 4) & 0xF) | ((instruction >> 16) & 0xFF0);
@@ -651,7 +650,7 @@ void Interpreter::multiply_long(ARM_CPU &cpu, uint32_t instruction)
     bool is_signed = instruction & (1 << 22);
     bool accumulate = instruction & (1 << 21);
     bool set_condition_codes = instruction & (1 << 20);
-    
+
     int dest_hi = (instruction >> 16) & 0xF;
     int dest_lo = (instruction >> 12) & 0xF;
     uint32_t first_operand = (instruction >> 8) & 0xF;
