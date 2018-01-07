@@ -278,10 +278,10 @@ void ARM_CPU::execute()
 
 void ARM_CPU::jp(uint32_t new_addr, bool change_thumb_state)
 {
-    if (new_addr == 0x02013218)
+    /*if (new_addr == 0x02013218)
         Config::test = true;
     if (new_addr == 0x02006124)
-        Config::test = false;
+        Config::test = false;*/
     regs[15] = new_addr;
     
     //Simulate pipeline clear by adding extra cycles

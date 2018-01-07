@@ -24,6 +24,8 @@ int EmuWindow::initialize()
     if (emuthread.init())
         return 1;
 
+    Config::test = false;
+
     ROM_file_name = "";
 
     load_ROM_act = new QAction(tr("&Load ROM..."), this);
