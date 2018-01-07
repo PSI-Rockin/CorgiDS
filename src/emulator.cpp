@@ -273,6 +273,7 @@ void Emulator::debug()
     //printf("\nIE9: $%08X IF9: $%08X", int9_reg.IE, int9_reg.IF);
     //printf("\nIE7: $%08X IF7: $%08X", int7_reg.IE, int7_reg.IF);
     //debugger.dump_disassembly();
+    Config::test = !Config::test;
 }
 
 void Emulator::run()

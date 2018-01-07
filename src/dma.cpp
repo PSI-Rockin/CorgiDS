@@ -194,14 +194,16 @@ void NDS_DMA::write_len(int index, uint16_t len)
     if (dmas[index].is_arm9)
     {
         if (len == 0)
-            dmas[index].length = 0x200000;
+            dmas[index].length = 0;
+            //dmas[index].length = 0x200000;
         else
             dmas[index].length = len & 0x1FFFFF;
     }
     else
     {
         if (len == 0)
-            dmas[index].length = (index == 7) ? 0x10000 : 0x4000;
+            dmas[index].length = 0;
+            //dmas[index].length = (index == 7) ? 0x10000 : 0x4000;
         else
             dmas[index].length = (index == 7) ? len & 0xFFFF : 0x3FFF;
     }

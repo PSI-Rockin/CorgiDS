@@ -15,7 +15,7 @@ void Interpreter::thumb_interpret(ARM_CPU &cpu)
 
     THUMB_INSTR opcode = thumb_decode(instruction);
     
-    /*if (!cpu.get_id() && Config::test)
+    if (!cpu.get_id() && Config::test)
     {
         if (opcode != THUMB_INSTR::LONG_BLX && opcode != THUMB_INSTR::LONG_BRANCH)
         {
@@ -37,7 +37,7 @@ void Interpreter::thumb_interpret(ARM_CPU &cpu)
                 printf("%s", Disassembler::disasm_thumb(cpu, instruction, PC).c_str());
             }
         }
-    }*/
+    }
     
     switch (opcode)
     {

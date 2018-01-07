@@ -18,7 +18,7 @@ void Interpreter::arm_interpret(ARM_CPU &cpu)
     uint32_t instruction = cpu.get_current_instr();
     int condition = (instruction & 0xF0000000) >> 28;
     
-    /*if (!cpu.get_id() && Config::test)
+    if (!cpu.get_id() && Config::test)
     {
         printf("\n");
         uint32_t PC = cpu.get_PC() - 8;
@@ -28,7 +28,7 @@ void Interpreter::arm_interpret(ARM_CPU &cpu)
             printf("(7A)");
         printf("[$%08X] {$%08X} - ", PC, instruction);
         printf("%s", Disassembler::disasm_arm(cpu, instruction, PC).c_str());
-    }*/
+    }
     
     uint32_t op = ((instruction >> 4) & 0xF) | ((instruction >> 16) & 0xFF0);
     //ARM_INSTR opcode = arm_decode(instruction);
