@@ -78,16 +78,11 @@ void NDS_DMA::handle_event(SchedulerEvent &event)
             }
             active_DMA->internal_len = 0;
             active_DMAs &= ~(1 << event.id);
+            //Reload dest
+            if (active_DMA->CNT.dest_control == 3)
+                active_DMA->internal_dest = active_DMA->destination;
             if (!active_DMA->CNT.repeat)
-            {
                 active_DMA->CNT.enabled = false;
-            }
-            else
-            {
-                //Reload dest
-                if (active_DMA->CNT.dest_control == 3)
-                    active_DMA->internal_dest = active_DMA->destination;
-            }
             return;
         }
 

@@ -2417,7 +2417,6 @@ void GPU_3D::VIEWPORT(uint32_t word)
 
 void GPU_3D::BOX_TEST()
 {
-    printf("\nBOX_TEST");
     GXSTAT.boxtest_result = false;
 
     Vertex cube[8], face[10];
@@ -2446,18 +2445,19 @@ void GPU_3D::BOX_TEST()
 
     for (int i = 0; i < 8; i++)
     {
-        int64_t x = cube[i].coords[0];
-        int64_t y = cube[i].coords[1];
-        int64_t z = cube[i].coords[2];
+        int64_t x = (int32_t)cube[i].coords[0];
+        int64_t y = (int32_t)cube[i].coords[1];
+        int64_t z = (int32_t)cube[i].coords[2];
+        int64_t w = 0x1000;
 
         cube[i].coords[0] = (x * clip_mtx.m[0][0] + y * clip_mtx.m[1][0] +
-                z * clip_mtx.m[2][0] + 0x1000 * clip_mtx.m[3][0]) >> 12;
+                z * clip_mtx.m[2][0] + w * clip_mtx.m[3][0]) >> 12;
         cube[i].coords[1] = (x * clip_mtx.m[0][1] + y * clip_mtx.m[1][1] +
-                z * clip_mtx.m[2][1] + 0x1000 * clip_mtx.m[3][1]) >> 12;
+                z * clip_mtx.m[2][1] + w * clip_mtx.m[3][1]) >> 12;
         cube[i].coords[2] = (x * clip_mtx.m[0][2] + y * clip_mtx.m[1][2] +
-                z * clip_mtx.m[2][2] + 0x1000 * clip_mtx.m[3][2]) >> 12;
+                z * clip_mtx.m[2][2] + w * clip_mtx.m[3][2]) >> 12;
         cube[i].coords[3] = (x * clip_mtx.m[0][3] + y * clip_mtx.m[1][3] +
-                z * clip_mtx.m[2][3] + 0x1000 * clip_mtx.m[3][3]) >> 12;
+                z * clip_mtx.m[2][3] + w * clip_mtx.m[3][3]) >> 12;
     }
 
     int vertices;

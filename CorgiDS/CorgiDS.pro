@@ -45,7 +45,8 @@ SOURCES += \
     ../src/emuthread.cpp \
     ../src/bios.cpp \
     ../src/audiodevice.cpp \
-    ../src/disasm_thumb.cpp
+    ../src/disasm_thumb.cpp \
+    ../src/debugger.cpp
 
 DEFINES += QT_DEPRECATED_WARNINGS
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000
@@ -78,7 +79,8 @@ HEADERS += \
     ../src/gpu3d.hpp \
     ../src/emuthread.hpp \
     ../src/bios.hpp \
-    ../src/audiodevice.hpp
+    ../src/audiodevice.hpp \
+    ../src/debugger.hpp
 
 FORMS += \
     ../src/configwindow.ui \

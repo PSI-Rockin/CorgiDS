@@ -55,7 +55,7 @@ void POWCNT2_REG::set(uint8_t byte)
     wifi_enabled = byte & 0x2;
 }
 
-Emulator::Emulator() : arm7(this, 1), arm9(this, 0), arm9_cp15(this), cart(this), dma(this),
+Emulator::Emulator() : arm7(this, 1), arm9(this, 0), arm9_cp15(this), cart(this), debugger(this), dma(this),
                        gpu(this), spi(this), spu(this), timers(this) {}
 
 int Emulator::init()
@@ -258,13 +258,21 @@ void Emulator::direct_boot()
     cycles = 0;
 }
 
+void Emulator::mark_as_arm(uint32_t address)
+{
+    debugger.mark_as_arm(address);
+}
+
+void Emulator::mark_as_thumb(uint32_t address)
+{
+    debugger.mark_as_thumb(address);
+}
+
 void Emulator::debug()
 {
-    //arm7.set_disassembly(!arm7.can_disassemble());
-    //arm9.print_info();
-    Config::test = !Config::test;
-    printf("\nIE9: $%08X IF9: $%08X", int9_reg.IE, int9_reg.IF);
-    printf("\nIE7: $%08X IF7: $%08X", int7_reg.IE, int7_reg.IF);
+    //printf("\nIE9: $%08X IF9: $%08X", int9_reg.IE, int9_reg.IF);
+    //printf("\nIE7: $%08X IF7: $%08X", int7_reg.IE, int7_reg.IF);
+    //debugger.dump_disassembly();
 }
 
 void Emulator::run()

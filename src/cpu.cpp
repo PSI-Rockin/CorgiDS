@@ -257,6 +257,8 @@ void ARM_CPU::execute()
     if (!CPSR.thumb_on)
     {
         current_instr = read_word(regs[15] - 4);
+        if (Config::test)
+            e->mark_as_arm(regs[15] - 4);
         add_s32_code(regs[15] - 4, 1);
         regs[15] += 4;
         Interpreter::arm_interpret(*this);
@@ -264,6 +266,8 @@ void ARM_CPU::execute()
     else
     {
         current_instr = read_halfword(regs[15] - 2);
+        if (Config::test)
+            e->mark_as_thumb(regs[15] - 4);
         add_s16_code(regs[15] - 2, 1);
         regs[15] += 2;
         Interpreter::thumb_interpret(*this);
@@ -274,6 +278,10 @@ void ARM_CPU::execute()
 
 void ARM_CPU::jp(uint32_t new_addr, bool change_thumb_state)
 {
+    if (new_addr == 0x02013218)
+        Config::test = true;
+    if (new_addr == 0x02006124)
+        Config::test = false;
     regs[15] = new_addr;
     
     //Simulate pipeline clear by adding extra cycles

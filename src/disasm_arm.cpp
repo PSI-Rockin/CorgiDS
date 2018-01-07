@@ -39,7 +39,7 @@ string Disassembler::disasm_arm(ARM_CPU& cpu, uint32_t instruction, uint32_t add
         case ARM_INSTR::LOAD_BYTE:
         case ARM_INSTR::STORE_WORD:
         case ARM_INSTR::LOAD_WORD:
-            output = disasm_load_store(cpu, instruction);
+            output = disasm_load_store(cpu, instruction, address);
             break;
         case ARM_INSTR::STORE_HALFWORD:
         case ARM_INSTR::LOAD_HALFWORD:
@@ -402,7 +402,7 @@ string Disassembler::disasm_swap(ARM_CPU &cpu, uint32_t instruction)
     return output.str();
 }
 
-string Disassembler::disasm_load_store(ARM_CPU &cpu, uint32_t instruction)
+string Disassembler::disasm_load_store(ARM_CPU &cpu, uint32_t instruction, uint32_t address)
 {
     stringstream output;
     bool is_loading = instruction & (1 << 20);
@@ -424,7 +424,7 @@ string Disassembler::disasm_load_store(ARM_CPU &cpu, uint32_t instruction)
     //Handle ldr =adr
     if (is_loading && base == REG_PC && is_imm)
     {
-        uint32_t literal = cpu.get_PC();
+        uint32_t literal = address + 8;
         literal += instruction & 0xFFF;
         output << " " << ARM_CPU::get_reg_name(reg) << ", =0x";
         output << std::hex << cpu.read_word(literal);

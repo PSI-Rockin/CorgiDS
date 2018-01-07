@@ -131,6 +131,7 @@ class GPU_2D_Engine
         GPU_2D_Engine(GPU* gpu, bool engine_A);
         void draw_backdrop();
         void draw_bg_txt(int index);
+        void draw_bg_aff(int index);
         void draw_bg_ext(int index);
         void draw_sprites();
         void draw_rotscale_sprite(uint16_t* attributes);

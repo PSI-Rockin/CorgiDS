@@ -197,9 +197,6 @@ string Disassembler::disasm_thumb_hi_reg_op(ARM_CPU &cpu, uint16_t instruction)
                 output << "bx";
             use_dest = false;
             break;
-        default:
-            printf("High-reg Thumb opcode $%02X not recognized\n", opcode);
-            exit(2);
     }
 
     output << " ";

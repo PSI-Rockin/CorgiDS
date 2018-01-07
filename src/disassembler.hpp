@@ -20,7 +20,7 @@ namespace Disassembler
     std::string disasm_multiply_long(ARM_CPU& cpu, uint32_t instruction);
     std::string disasm_signed_halfword_multiply(ARM_CPU& cpu, uint32_t instruction);
     std::string disasm_swap(ARM_CPU& cpu, uint32_t instruction);
-    std::string disasm_load_store(ARM_CPU& cpu, uint32_t instruction);
+    std::string disasm_load_store(ARM_CPU& cpu, uint32_t instruction, uint32_t address);
     std::string disasm_load_store_halfword(ARM_CPU& cpu, uint32_t instruction);
     std::string disasm_load_signed(ARM_CPU& cpu, uint32_t instruction);
     std::string disasm_load_store_block(ARM_CPU& cpu, uint32_t instruction);

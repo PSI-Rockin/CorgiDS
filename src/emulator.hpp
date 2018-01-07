@@ -9,6 +9,7 @@
 #include "bios.hpp"
 #include "cartridge.hpp"
 #include "cpu.hpp"
+#include "debugger.hpp"
 #include "dma.hpp"
 #include "gpu.hpp"
 #include "interrupts.hpp"
@@ -69,6 +70,7 @@ class Emulator
         ARM_CPU arm7, arm9;
         BIOS bios;
         CP15 arm9_cp15;
+        Debugger debugger;
         NDS_Cart cart;
         NDS_DMA dma;
         GPU gpu;
@@ -139,6 +141,9 @@ class Emulator
         void load_firmware(uint8_t* firmware);
         void load_save_database(std::string name);
         int load_ROM(std::string ROM_name);
+
+        void mark_as_arm(uint32_t address);
+        void mark_as_thumb(uint32_t address);
 
         void power_on();
         void direct_boot();

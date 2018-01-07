@@ -15,7 +15,7 @@ uint32_t Emulator::arm9_read_word(uint32_t address)
         printf("\nRead32 $%08X: $%08X", address, *(uint32_t*)&main_RAM[address & MAIN_RAM_MASK]);
     if (address >= MAIN_RAM_START && address < SHARED_WRAM_START)
         return *(uint32_t*)&main_RAM[address & MAIN_RAM_MASK];
-    if (address >= IO_REGS_START && address < GBA_ROM_START || address == 0x021F6404)
+    if ((address >= IO_REGS_START && address < GBA_ROM_START) || address == 0x021F6404)
     {
         if (Config::test)
             printf("\nRead32 $%08X", address);
@@ -150,12 +150,15 @@ uint32_t Emulator::arm9_read_word(uint32_t address)
         return gpu.read_bgb<uint32_t>(address);
     if (address >= VRAM_OBJA_START && address < VRAM_OBJB_START)
         return gpu.read_obja<uint32_t>(address);
+    if (address >= VRAM_OBJB_START && address < VRAM_LCDC_A)
+        return gpu.read_objb<uint32_t>(address);
     if (address >= VRAM_LCDC_A && address < VRAM_LCDC_END)
         return gpu.read_lcdc<uint32_t>(address);
     if (address >= OAM_START && address < GBA_ROM_START)
         return gpu.read_OAM<uint32_t>(address);
     if (address >= GBA_ROM_START)
         return 0xFFFFFFFF;
+    //Ignore reads from NULL
     printf("\n(9) Unrecognized word read from $%08X", address);
     //exit(1);
     return 0;
@@ -190,19 +193,6 @@ uint16_t Emulator::arm9_read_halfword(uint32_t address)
                 return 0;
         }
     }
-    if (address >= PALETTE_START && address < VRAM_BGA_START)
-    {
-        if ((address & 0x7FF) < 0x400)
-            return gpu.read_palette_A(address);
-        else
-            return gpu.read_palette_B(address);
-    }
-    if (address >= VRAM_OBJA_START && address < VRAM_OBJB_START)
-        return gpu.read_obja<uint16_t>(address);
-    if (address >= VRAM_OBJB_START && address < VRAM_LCDC_A)
-        return gpu.read_objb<uint16_t>(address);
-    if (address >= VRAM_LCDC_A && address < VRAM_LCDC_END)
-        return gpu.read_lcdc<uint16_t>(address);
     switch (address)
     {
         case 0x04000000:
@@ -318,11 +308,23 @@ uint16_t Emulator::arm9_read_halfword(uint32_t address)
     }
     if (address >= 0x04000630 && address < 0x04000636)
         return gpu.read_vec_test(address);
+    if (address >= PALETTE_START && address < VRAM_BGA_START)
+    {
+        if ((address & 0x7FF) < 0x400)
+            return gpu.read_palette_A(address);
+        else
+            return gpu.read_palette_B(address);
+    }
     if (address >= VRAM_BGA_START && address < VRAM_BGB_START)
         return gpu.read_bga<uint16_t>(address);
     if (address >= VRAM_BGB_START && address < VRAM_OBJA_START)
         return gpu.read_bgb<uint16_t>(address);
-
+    if (address >= VRAM_OBJA_START && address < VRAM_OBJB_START)
+        return gpu.read_obja<uint16_t>(address);
+    if (address >= VRAM_OBJB_START && address < VRAM_LCDC_A)
+        return gpu.read_objb<uint16_t>(address);
+    if (address >= VRAM_LCDC_A && address < VRAM_LCDC_END)
+        return gpu.read_lcdc<uint16_t>(address);
     if (address >= GBA_ROM_START)
         return 0xFFFF;
     printf("\n(9) Unrecognized halfword read from $%08X", address);
@@ -394,6 +396,10 @@ uint8_t Emulator::arm9_read_byte(uint32_t address)
         return gpu.read_bga<uint8_t>(address);
     if (address >= VRAM_BGB_START && address < VRAM_OBJA_START)
         return gpu.read_bgb<uint8_t>(address);
+    if (address >= VRAM_OBJA_START && address < VRAM_OBJB_START)
+        return gpu.read_obja<uint8_t>(address);
+    if (address >= VRAM_OBJB_START && address < VRAM_LCDC_A)
+        return gpu.read_objb<uint8_t>(address);
     if (address >= VRAM_LCDC_A && address < OAM_START)
         return gpu.read_lcdc<uint8_t>(address);
     if (address >= OAM_START && address < GBA_ROM_START)

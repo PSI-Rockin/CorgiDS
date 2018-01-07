@@ -275,17 +275,132 @@ void GPU_2D_Engine::draw_bg_txt(int index)
     }
 }
 
+void GPU_2D_Engine::draw_bg_aff(int index)
+{
+    int16_t rot_A, rot_B, rot_C, rot_D;
+    int32_t x_offset, y_offset;
+    if (index == 2)
+    {
+        rot_A = (int16_t)BG2P_internal[0];
+        rot_B = (int16_t)BG2P_internal[1];
+        rot_C = (int16_t)BG2P_internal[2];
+        rot_D = (int16_t)BG2P_internal[3];
+
+        x_offset = (int32_t)BG2X_internal;
+        y_offset = (int32_t)BG2Y_internal;
+    }
+    else
+    {
+        rot_A = (int16_t)BG3P_internal[0];
+        rot_B = (int16_t)BG3P_internal[1];
+        rot_C = (int16_t)BG3P_internal[2];
+        rot_D = (int16_t)BG3P_internal[3];
+
+        x_offset = (int32_t)BG3X_internal;
+        y_offset = (int32_t)BG3Y_internal;
+    }
+
+    uint32_t screen_base;
+    uint32_t char_base;
+    if (engine_A)
+    {
+        screen_base = VRAM_BGA_START + (DISPCNT.screen_base * 1024 * 64);
+        char_base = VRAM_BGA_START + (DISPCNT.char_base * 1024 * 64);
+    }
+    else
+    {
+        screen_base = VRAM_BGB_START;
+        char_base = VRAM_BGB_START;
+    }
+
+    screen_base += ((BGCNT[index] >> 8) & 0x1F) * 1024 * 2;
+    char_base += ((BGCNT[index] >> 2) & 0xF) * 1024 * 16;
+
+    int screen_size = BGCNT[index] >> 14;
+    uint32_t mask;
+    switch (screen_size)
+    {
+        case 0:
+            mask = 0x7800;
+            break;
+        case 1:
+            mask = 0xF800;
+            break;
+        case 2:
+            mask = 0x1F800;
+            break;
+        case 3:
+            mask = 0x3F800;
+            break;
+    }
+    int y_factor = screen_size + 4;
+    uint32_t overflow_mask = (BGCNT[index] & (1 << 13)) ? 0 : ~(mask | 0x7FF);
+    uint16_t* palette = gpu->get_palette(engine_A);
+    for (int pixel = 0; pixel < PIXELS_PER_LINE; pixel++)
+    {
+        if (window_mask[pixel] & (1 << index))
+        {
+            if ((!((x_offset | y_offset) & overflow_mask)))
+            {
+                uint16_t tile;
+                uint16_t color;
+                uint32_t tile_addr = ((((y_offset & mask) >> 11) << y_factor) + ((x_offset & mask) >> 11));
+
+                uint32_t tile_x_offset = (x_offset >> 8) & 0x7;
+                uint32_t tile_y_offset = (y_offset >> 8) & 0x7;
+                if (engine_A)
+                    tile = gpu->read_bga<uint8_t>(screen_base + tile_addr);
+                else
+                    tile = gpu->read_bgb<uint8_t>(screen_base + tile_addr);
+
+                uint32_t char_addr = (tile << 6) + (tile_y_offset << 3) + tile_x_offset;
+                if (engine_A)
+                    color = gpu->read_bga<uint8_t>(char_base + char_addr);
+                else
+                    color = gpu->read_bgb<uint8_t>(char_base + char_addr);
+
+                if (color)
+                {
+                    if (engine_A)
+                        color = gpu->read_palette_A(color * 2);
+                    else
+                        color = gpu->read_palette_B(color * 2);
+                    uint32_t final_color = 0xFF000000;
+                    int r = (color & 0x1F) << 3;
+                    int g = ((color >> 5) & 0x1F) << 3;
+                    int b = ((color >> 10) & 0x1F) << 3;
+
+                    final_color |= r << 16;
+                    final_color |= g << 8;
+                    final_color |= b;
+                    framebuffer[pixel + (gpu->get_VCOUNT() * PIXELS_PER_LINE)] = final_color;
+                    final_bg_priority[pixel] = BGCNT[index] & 0x3;
+                }
+            }
+        }
+        x_offset += rot_A;
+        y_offset += rot_C;
+    }
+
+    if (index == 2)
+    {
+        BG2X_internal += rot_B;
+        BG2Y_internal += rot_D;
+    }
+    else
+    {
+        BG3X_internal += rot_B;
+        BG3Y_internal += rot_D;
+    }
+}
+
 void GPU_2D_Engine::draw_bg_ext(int index)
 {
     uint32_t base;
     if (engine_A)
-    {
         base = VRAM_BGA_START;
-    }
     else
-    {
-        base = VRAM_BGB_C;
-    }
+        base = VRAM_BGB_START;
     int y_offset = gpu->get_VCOUNT();
     if (index == 2)
         y_offset += BG2Y >> 8;
@@ -417,9 +532,7 @@ void GPU_2D_Engine::draw_ext_text(int index)
             mask = 0x3F800;
             break;
     }
-    int y_factor = screen_size + 7;
-
-    y_factor -= 3;
+    int y_factor = screen_size + 4;
 
     int extpal_base = index * 1024 * 8;
     uint32_t overflow_mask = (BGCNT[index] & (1 << 13)) ? 0 : ~(mask | 0x7FF);
@@ -959,6 +1072,10 @@ void GPU_2D_Engine::draw_scanline()
                 case 0:
                     draw_bg_txt(3);
                     break;
+                case 1:
+                case 2:
+                    draw_bg_aff(3);
+                    break;
                 case 3:
                 case 4:
                 case 5:
@@ -974,6 +1091,10 @@ void GPU_2D_Engine::draw_scanline()
                 case 1:
                 case 3:
                     draw_bg_txt(2);
+                    break;
+                case 2:
+                case 4:
+                    draw_bg_aff(2);
                     break;
                 case 5:
                     draw_bg_ext(2);
