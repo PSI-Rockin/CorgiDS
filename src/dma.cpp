@@ -189,21 +189,19 @@ void NDS_DMA::write_dest(int index, uint32_t dest)
     dmas[index].destination = dest;
 }
 
-void NDS_DMA::write_len(int index, uint16_t len)
+void NDS_DMA::write_len(int index, uint32_t len)
 {
     if (dmas[index].is_arm9)
     {
         if (len == 0)
-            dmas[index].length = 0;
-            //dmas[index].length = 0x200000;
+            dmas[index].length = 0x200000;
         else
             dmas[index].length = len & 0x1FFFFF;
     }
     else
     {
         if (len == 0)
-            dmas[index].length = 0;
-            //dmas[index].length = (index == 7) ? 0x10000 : 0x4000;
+            dmas[index].length = (index == 7) ? 0x10000 : 0x4000;
         else
             dmas[index].length = (index == 7) ? len & 0xFFFF : 0x3FFF;
     }
@@ -245,7 +243,7 @@ void NDS_DMA::write_CNT(int index, uint16_t CNT)
 
 void NDS_DMA::write_len_CNT(int index, uint32_t word)
 {
-    write_len(index, word & 0xFFFF);
+    write_len(index, word & 0x1FFFFF);
     write_CNT(index, word >> 16);
 }
 

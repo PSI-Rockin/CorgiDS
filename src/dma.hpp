@@ -62,15 +62,13 @@ class NDS_DMA
     
         void write_source(int index, uint32_t source);
         void write_dest(int index, uint32_t dest);
-        void write_len(int index, uint16_t len);
+        void write_len(int index, uint32_t len);
         void write_CNT(int index, uint16_t CNT);
         void write_len_CNT(int index, uint32_t word);
     
         void HBLANK_request();
         void gamecart_request();
         void GXFIFO_request();
-
-
 };
 
 inline bool NDS_DMA::is_active(int cpu_id)
