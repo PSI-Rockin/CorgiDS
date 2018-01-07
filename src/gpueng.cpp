@@ -566,6 +566,7 @@ void GPU_2D_Engine::draw_ext_text(int index)
 
 void GPU_2D_Engine::draw_rotscale_sprite(uint16_t *attributes)
 {
+    int flags = (1 << 31);
     const int sprite_sizes[3][8] =
     {
         {1, 1, 2, 2, 4, 4, 8, 8}, //Square
@@ -638,8 +639,10 @@ void GPU_2D_Engine::draw_rotscale_sprite(uint16_t *attributes)
     int y_dimension_num;
     int palette_id = attributes[2] >> 12;
     bool one_palette_mode = attributes[0] & 0x2000;
-
-    if (shape == 3)
+    int mode = (attributes[0] >> 10) & 0x3;
+    if (mode == 1)
+        flags |= (1 << 30);
+    if (mode == 3)
     {
         return;
     }
@@ -701,7 +704,7 @@ void GPU_2D_Engine::draw_rotscale_sprite(uint16_t *attributes)
                         }
 
                         sprite_scanline[x] = color;
-                        sprite_scanline[x] |= (1 << 31);
+                        sprite_scanline[x] |= flags;
                     }
                 }
                 rot_x += rot_A;
@@ -737,7 +740,7 @@ void GPU_2D_Engine::draw_rotscale_sprite(uint16_t *attributes)
                             sprite_scanline[x] = gpu->read_palette_A(0x200 + (palette_id * 32) + color * 2);
                         else
                             sprite_scanline[x] = gpu->read_palette_B(0x200 + (palette_id * 32) + color * 2);
-                        sprite_scanline[x] |= (1 << 31);
+                        sprite_scanline[x] |= flags;
                     }
                 }
                 rot_x += rot_A;
@@ -781,6 +784,7 @@ void GPU_2D_Engine::draw_sprites()
     {
         for (int obj = 127; obj >= 0; obj--)
         {
+            uint32_t flags = (1 << 31); //indicates the pixel has been drawn
             attributes[0] = gpu->read_OAM<uint16_t>(OAM_base + (obj * 8));
             attributes[1] = gpu->read_OAM<uint16_t>(OAM_base + (obj * 8) + 2);
             attributes[2] = gpu->read_OAM<uint16_t>(OAM_base + (obj * 8) + 4);
@@ -813,12 +817,16 @@ void GPU_2D_Engine::draw_sprites()
             if (y >= sprite_sizes[shape][(size * 2) + 1] * 8)
                 continue;
 
+            if (mode == 1)
+                flags |= (1 << 30);
+
             if (mode == 3)
             {
                 int alpha = attributes[2] >> 12;
                 if (!alpha)
                     continue;
                 alpha++;
+                flags |= (1 << 29) | (alpha << 16);
 
                 int width = sprite_sizes[shape][size * 2] * 8;
 
@@ -856,7 +864,7 @@ void GPU_2D_Engine::draw_sprites()
                     pixel_addr += 2;
                     if (color & (1 << 15))
                     {
-                        sprite_scanline[x_offset] = color | (1 << 31);
+                        sprite_scanline[x_offset] = color | flags;
                     }
                 }
             }
@@ -929,7 +937,7 @@ void GPU_2D_Engine::draw_sprites()
                                 sprite_scanline[index] = gpu->read_palette_A(0x200 + (palette * 32) + colors[index] * 2);
                             else
                                 sprite_scanline[index] = gpu->read_palette_B(0x200 + (palette * 32) + colors[index] * 2);
-                            sprite_scanline[index] |= (1 << 31);
+                            sprite_scanline[index] |= flags;
                         }
                     }
                     else
@@ -974,7 +982,7 @@ void GPU_2D_Engine::draw_sprites()
                                 else
                                     sprite_scanline[index] = gpu->read_palette_B(0x200 + colors[index] * 2);
                             }
-                            sprite_scanline[index] |= (1 << 31);
+                            sprite_scanline[index] |= flags;
                         }
                     }
                 }
@@ -987,6 +995,16 @@ void GPU_2D_Engine::draw_sprites()
         if (!(sprite_scanline[i] & (1 << 31)))
             continue;
         draw_pixel(i, gpu->get_VCOUNT(), sprite_scanline[i] & 0x7FFF, 4);
+        if (sprite_scanline[i] & (1 << 30))
+        {
+            layer_sources[i] |= 0x80; //semitransparent effect
+        }
+        if (sprite_scanline[i] & (1 << 29))
+        {
+            //bitmap alpha
+            layer_sources[i] = (sprite_scanline[i] >> 16) & 0x1F;
+            layer_sources[i] |= 0x80 | 0x40 | 0x10;
+        }
     }
 }
 
@@ -1064,7 +1082,7 @@ void GPU_2D_Engine::draw_scanline()
                     if ((bark[i] & (1 << 31)))
                     {
                         layer_sources[i + 256] = layer_sources[i];
-                        layer_sources[i] = 1;
+                        layer_sources[i] = 0x41; //account for both BG0 and 3D
                         framebuffer[i + (gpu->get_VCOUNT() * PIXELS_PER_LINE)] = bark[i];
                         final_bg_priority[i] = BGCNT[0] & 0x3;
                     }
@@ -1262,18 +1280,69 @@ void GPU_2D_Engine::handle_BLDCNT_effects()
             blend_factor = 16;
         int effect;
         uint16_t BLD_flags = get_BLDCNT();
+
+        uint8_t layer1 = layer_sources[pixel];
+        uint8_t layer2 = layer_sources[pixel + 256];
+        if (layer2 & 0x40)
+            layer2 = 0x1;
+
+        int eva = BLDALPHA & 0x1F;
+        int evb = (BLDALPHA >> 8) & 0x1F;
+
         if (!(window_mask[pixel] & 0x20))
             effect = 0;
-        else if (layer_sources[pixel] & (BLD_flags & 0xFF))
+        else if ((layer1 & 0x80) && (layer2 & (BLD_flags >> 8)))
         {
-            if (BLDCNT.effect == 1 && (layer_sources[pixel + 256] & (BLD_flags >> 8)))
+            //Sprite blending - semitransparent sprites and bitmap sprites
+            effect = 1;
+
+            //additional check for bitmap sprites
+            if (layer1 & 0x40)
+            {
+                eva = layer1 & 0x1F;
+                evb = 16 - eva;
+            }
+        }
+        else if ((layer1 & 0x40) && (layer2 & (BLD_flags >> 8)))
+        {
+            //3D/2D blending
+            uint8_t r2 = (second_layer[pixel] >> 16) & 0x3F;
+            uint8_t g2 = (second_layer[pixel] >> 8) & 0x3F;
+            uint8_t b2 = second_layer[pixel] & 0x3F;
+            eva = (framebuffer[pixel + scanline] >> 24) & 0x1F;
+            eva++;
+            evb = 32 - eva;
+
+            r = ((r * eva) + (r2 * evb)) >> 5;
+            g = ((g * eva) + (g2 * evb)) >> 5;
+            b = ((b * eva) + (b2 * evb)) >> 5;
+
+            if (eva <= 16)
+            {
+                r++;
+                g++;
+                b++;
+            }
+
+            if (r > 0x3F)
+                r = 0x3F;
+            if (g > 0x3F)
+                g = 0x3F;
+            if (b > 0x3F)
+                b = 0x3F;
+
+            framebuffer[pixel + scanline] = 0xFF000000 | (r << 16) | (g << 8) | b;
+            continue;
+        }
+        else if (layer1 & (BLD_flags & 0xFF))
+        {
+            if (BLDCNT.effect == 1 && (layer2 & (BLD_flags >> 8)))
                 effect = 1;
             else if (BLDCNT.effect >= 2)
                 effect = BLDCNT.effect;
             else
                 effect = 0;
         }
-
         else
             effect = 0;
 
@@ -1284,8 +1353,6 @@ void GPU_2D_Engine::handle_BLDCNT_effects()
                 uint8_t r2 = (second_layer[pixel] >> 16) & 0x3F;
                 uint8_t g2 = (second_layer[pixel] >> 8) & 0x3F;
                 uint8_t b2 = second_layer[pixel] & 0x3F;
-                int eva = BLDALPHA & 0x1F;
-                int evb = (BLDALPHA >> 8) & 0x1F;
                 if (eva > 16)
                     eva = 16;
                 if (evb > 16)
@@ -1631,7 +1698,6 @@ void GPU_2D_Engine::set_BLDALPHA(uint16_t halfword)
 
 void GPU_2D_Engine::set_BLDY(uint8_t byte)
 {
-    printf("\nSet BLDY: $%02X", byte);
     BLDY = byte;
 }
 

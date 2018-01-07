@@ -156,9 +156,11 @@ void GPU_3D::render_scanline()
     //X=(X*200h)+((X+1)/8000h)*1FFh
     uint32_t rear_z = (CLEAR_DEPTH * 0x200) + ((CLEAR_DEPTH + 1) / 0x8000) * 0x1FF;
     bool rear_plane_fog = CLEAR_COLOR & (1 << 15);
+    int rear_a = (CLEAR_COLOR >> 16) & 0x1F;
+    uint32_t rear_color = rear_a << 24;
     for (int i = 0; i < PIXELS_PER_LINE; i++)
     {
-        framebuffer[i] = 0;
+        framebuffer[i] = rear_color;
         z_buffer[line][i] = rear_z;
         trans_poly_ids[i] = 0xFF;
         fog_flags[i] = rear_plane_fog;
@@ -342,7 +344,7 @@ void GPU_3D::render_scanline()
                 if (pix_z > z_buffer[line][x])
                     continue;
             }
-            uint32_t final_color = 0xFF000000;
+            uint32_t final_color = 0;
             uint32_t vr = 0, vg = 0, vb = 0, va = 0;
             uint16_t tr = 0x3E, tg = 0x3E, tb = 0x3E, ta = 0x1F;
 
@@ -720,20 +722,29 @@ void GPU_3D::render_scanline()
 
                 trans_poly_ids[x] = current_poly->attributes.id;
 
+                int pa = (framebuffer[x] >> 24) & 0x1F;
                 int pr = (framebuffer[x] >> 16) & 0x3F;
                 int pg = (framebuffer[x] >> 8) & 0x3F;
                 int pb = framebuffer[x] & 0x3F;
 
-                r = (((alpha + 1) * r) + (31 - alpha) * pr) / 32;
-                g = (((alpha + 1) * g) + (31 - alpha) * pg) / 32;
-                b = (((alpha + 1) * b) + (31 - alpha) * pb) / 32;
+                if (pa)
+                {
+                    r = (((alpha + 1) * r) + (31 - alpha) * pr) / 32;
+                    g = (((alpha + 1) * g) + (31 - alpha) * pg) / 32;
+                    b = (((alpha + 1) * b) + (31 - alpha) * pb) / 32;
+                    alpha = max(alpha, pa);
+                }
             }
 
+            if (alpha > 0x1F)
+                alpha = 0x1F;
+
+            final_color |= alpha << 24;
             final_color |= r << 16;
             final_color |= g << 8;
             final_color |= b;
 
-            framebuffer[x] = 0xFF000000 + final_color;
+            framebuffer[x] = 0x80000000 + final_color;
             fog_flags[x] = current_poly->attributes.fog_enable;
         }
     }
@@ -763,14 +774,17 @@ void GPU_3D::render_scanline()
                 }
                 if (!DISP3DCNT.fog_alpha_only)
                 {
-                    uint32_t new_color = 0xFF000000;
+                    uint32_t new_color = 0x80000000;
                     int fog_r = (FOG_COLOR & 0x1F) << 1;
                     int fog_g = ((FOG_COLOR >> 5) & 0x1F) << 1;
                     int fog_b = ((FOG_COLOR >> 10) & 0x1F) << 1;
+                    int fog_a = ((FOG_COLOR >> 16) & 0x1F);
                     int poly_r = (framebuffer[i] >> 16) & 0x3F;
                     int poly_g = (framebuffer[i] >> 8) & 0x3F;
                     int poly_b = framebuffer[i] & 0x3F;
+                    int poly_a = (framebuffer[i] >> 24) & 0x1F;
 
+                    new_color |= ((fog_a * density + poly_a * (128 - density)) / 128) << 24;
                     new_color |= ((fog_r * density + poly_r * (128 - density)) / 128) << 16;
                     new_color |= ((fog_g * density + poly_g * (128 - density)) / 128) << 8;
                     new_color |= ((fog_b * density + poly_b * (128 - density)) / 128);

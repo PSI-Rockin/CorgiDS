@@ -865,13 +865,11 @@ void GPU::set_BLDALPHA_B(uint16_t halfword)
 
 void GPU::set_BLDY_A(uint8_t byte)
 {
-    printf("\nSet BLDY_A: $%02X", byte);
     eng_A.set_BLDY(byte);
 }
 
 void GPU::set_BLDY_B(uint8_t byte)
 {
-    printf("\nSet BLDY_B: $%02X", byte);
     eng_B.set_BLDY(byte);
 }
 
