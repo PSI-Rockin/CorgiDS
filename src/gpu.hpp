@@ -90,8 +90,6 @@ class GPU
 
         uint64_t get_cycles() { return cycles; }
 
-        void draw_3D_scanline(uint32_t* framebuffer, uint8_t bg_priorities[256], uint8_t bg0_priority);
-
         void power_on();
         void run_3D(uint64_t cycles);
         void handle_event(SchedulerEvent& event);

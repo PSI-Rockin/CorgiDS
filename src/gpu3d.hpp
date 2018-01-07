@@ -121,6 +121,7 @@ class GPU_3D
     private:
         Emulator* e;
         GPU* gpu;
+        uint32_t framebuffer[PIXELS_PER_LINE];
         int cycles;
         DISP3DCNT_REG DISP3DCNT;
         POLYGON_ATTR_REG POLYGON_ATTR;
@@ -228,7 +229,7 @@ class GPU_3D
         GPU_3D(Emulator* e, GPU* gpu);
         ~GPU_3D();
         void power_on();
-        void render_scanline(uint32_t* framebuffer, uint8_t bg_priorities[256], uint8_t bg0_priority);
+        void render_scanline();
         void run(uint64_t cycles_to_run);
         void end_of_frame();
         void check_FIFO_DMA();
@@ -237,6 +238,7 @@ class GPU_3D
         void write_GXFIFO(uint32_t word);
         void write_FIFO_direct(uint32_t address, uint32_t word);
 
+        uint32_t* get_framebuffer();
         uint16_t get_DISP3DCNT();
         uint32_t get_GXSTAT();
         uint16_t get_vert_count();

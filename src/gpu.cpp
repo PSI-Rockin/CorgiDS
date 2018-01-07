@@ -12,7 +12,7 @@
 
 GPU::GPU(Emulator* e) : e(e), eng_A(this, true), eng_B(this, false), eng_3D(e, this), frame_complete(false), cycles(0)
 {
-
+    eng_A.set_eng_3D(&eng_3D);
 }
 
 void GPU::power_on()
@@ -132,11 +132,6 @@ void GPU::handle_event(SchedulerEvent &event)
             e->add_GPU_event(0, 256 * 6);
             break;
     }
-}
-
-void GPU::draw_3D_scanline(uint32_t* framebuffer, uint8_t bg_priorities[256], uint8_t bg0_priority)
-{
-    eng_3D.render_scanline(framebuffer, bg_priorities, bg0_priority);
 }
 
 void GPU::draw_scanline()
@@ -870,11 +865,13 @@ void GPU::set_BLDALPHA_B(uint16_t halfword)
 
 void GPU::set_BLDY_A(uint8_t byte)
 {
+    printf("\nSet BLDY_A: $%02X", byte);
     eng_A.set_BLDY(byte);
 }
 
 void GPU::set_BLDY_B(uint8_t byte)
 {
+    printf("\nSet BLDY_B: $%02X", byte);
     eng_B.set_BLDY(byte);
 }
 

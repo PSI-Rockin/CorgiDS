@@ -11,7 +11,7 @@
 #include "gpu.hpp"
 #include "gpueng.hpp"
 
-GPU_2D_Engine::GPU_2D_Engine(GPU* gpu, bool engine_A) : gpu(gpu), engine_A(engine_A) {}
+GPU_2D_Engine::GPU_2D_Engine(GPU* gpu, bool engine_A) : gpu(gpu), eng_3D(nullptr), engine_A(engine_A) {}
 
 void GPU_2D_Engine::VBLANK_start()
 {
@@ -33,17 +33,20 @@ void GPU_2D_Engine::draw_backdrop()
 {
     uint16_t* palette = gpu->get_palette(engine_A);
     for (int x = 0; x < PIXELS_PER_LINE; x++)
-    {
-        uint32_t color = 0xFF000000;
-        int r = (palette[0] & 0x1F) << 3;
-        int g = ((palette[0] >> 5) & 0x1F) << 3;
-        int b = ((palette[0] >> 10) & 0x1F) << 3;
+        draw_pixel(x, gpu->get_VCOUNT(), palette[0], 5);
+}
 
-        color |= r << 16;
-        color |= g << 8;
-        color |= b;
-        framebuffer[x + (gpu->get_VCOUNT() * PIXELS_PER_LINE)] = color;
-    }
+void GPU_2D_Engine::draw_pixel(int x, int y, uint16_t color, int source)
+{
+    int pixel = x + (y * PIXELS_PER_LINE);
+    uint8_t r = (color & 0x1F) << 1;
+    uint8_t g = ((color >> 5) & 0x1F) << 1;
+    uint8_t b = ((color >> 10) & 0x1F) << 1;
+    uint32_t new_color = 0xFF000000 | (r << 16) | (g << 8) | b;
+    layer_sources[x + 256] = layer_sources[x];
+    second_layer[x] = framebuffer[pixel];
+    layer_sources[x] = (1 << source);
+    framebuffer[pixel] = new_color;
 }
 
 void GPU_2D_Engine::get_window_mask()
@@ -131,8 +134,6 @@ void GPU_2D_Engine::draw_bg_txt(int index)
 
     int wide_x = (BGCNT[index] & (1 << 14)) ? 0x100 : 0;
 
-    int scanline = gpu->get_VCOUNT() * PIXELS_PER_LINE;
-
     if (!one_palette_mode)
     {
         uint32_t data;
@@ -184,16 +185,7 @@ void GPU_2D_Engine::draw_bg_txt(int index)
             if (color && (window_mask[pixel] & (1 << index)))
             {
                 color = palette[(palette_id * 16) + color];
-
-                int true_color = 0xFF000000;
-                int r = (color & 0x1F) << 3;
-                int g = ((color >> 5) & 0x1F) << 3;
-                int b = ((color >> 10) & 0x1F) << 3;
-                true_color |= r << 16;
-                true_color |= g << 8;
-                true_color |= b;
-
-                framebuffer[pixel + scanline] = true_color;
+                draw_pixel(pixel, gpu->get_VCOUNT(), color, index);
                 final_bg_priority[pixel] = BGCNT[index] & 0x3;
             }
             x_offset++;
@@ -259,15 +251,7 @@ void GPU_2D_Engine::draw_bg_txt(int index)
                 else
                     color = palette[color];
 
-                int true_color = 0xFF000000;
-                int r = (color & 0x1F) << 3;
-                int g = ((color >> 5) & 0x1F) << 3;
-                int b = ((color >> 10) & 0x1F) << 3;
-                true_color |= r << 16;
-                true_color |= g << 8;
-                true_color |= b;
-
-                framebuffer[pixel + scanline] = true_color;
+                draw_pixel(pixel, gpu->get_VCOUNT(), color, index);
                 final_bg_priority[pixel] = BGCNT[index] & 0x3;
             }
             x_offset++;
@@ -361,19 +345,8 @@ void GPU_2D_Engine::draw_bg_aff(int index)
 
                 if (color)
                 {
-                    if (engine_A)
-                        color = gpu->read_palette_A(color * 2);
-                    else
-                        color = gpu->read_palette_B(color * 2);
-                    uint32_t final_color = 0xFF000000;
-                    int r = (color & 0x1F) << 3;
-                    int g = ((color >> 5) & 0x1F) << 3;
-                    int b = ((color >> 10) & 0x1F) << 3;
-
-                    final_color |= r << 16;
-                    final_color |= g << 8;
-                    final_color |= b;
-                    framebuffer[pixel + (gpu->get_VCOUNT() * PIXELS_PER_LINE)] = final_color;
+                    color = palette[color];
+                    draw_pixel(pixel, gpu->get_VCOUNT(), color, index);
                     final_bg_priority[pixel] = BGCNT[index] & 0x3;
                 }
             }
@@ -435,13 +408,7 @@ void GPU_2D_Engine::draw_bg_ext(int index)
 
                 if (color)
                 {
-                    uint32_t true_color = 0xFF000000;
-                    int r = (color & 0x1F) << 3;
-                    int g = ((color >> 5) & 0x1F) << 3;
-                    int b = ((color >> 10) & 0x1F) << 3;
-
-                    true_color |= (r << 16) | (g << 8) | b;
-                    framebuffer[i + (gpu->get_VCOUNT() * PIXELS_PER_LINE)] = true_color;
+                    draw_pixel(i, gpu->get_VCOUNT(), color, index);
                     final_bg_priority[i] = BGCNT[index] & 0x3;
                 }
             }
@@ -457,15 +424,7 @@ void GPU_2D_Engine::draw_bg_ext(int index)
                     ds_color = gpu->read_bgb<uint16_t>(base + (i * 2) + (y_offset * PIXELS_PER_LINE * 2));
                 if (!(ds_color & (1 << 15)))
                     continue;
-                uint32_t color = 0xFF000000;
-                int r = (ds_color & 0x1F) << 3;
-                int g = ((ds_color >> 5) & 0x1F) << 3;
-                int b = ((ds_color >> 10) & 0x1F) << 3;
-
-                color |= r << 16;
-                color |= g << 8;
-                color |= b;
-                framebuffer[i + (gpu->get_VCOUNT() * PIXELS_PER_LINE)] = color;
+                draw_pixel(i, gpu->get_VCOUNT(), ds_color, index);
                 final_bg_priority[i] = BGCNT[index] & 0x3;
             }
             break;
@@ -585,15 +544,7 @@ void GPU_2D_Engine::draw_ext_text(int index)
                         color = gpu->read_palette_B(color * 2);
                 }
 
-                int true_color = 0xFF000000;
-                int r = (color & 0x1F) << 3;
-                int g = ((color >> 5) & 0x1F) << 3;
-                int b = ((color >> 10) & 0x1F) << 3;
-                true_color |= r << 16;
-                true_color |= g << 8;
-                true_color |= b;
-
-                framebuffer[pixel + (gpu->get_VCOUNT() * PIXELS_PER_LINE)] = true_color;
+                draw_pixel(pixel, gpu->get_VCOUNT(), color, index);
                 final_bg_priority[pixel] = BGCNT[index] & 0x3;
             }
         }
@@ -1035,14 +986,7 @@ void GPU_2D_Engine::draw_sprites()
     {
         if (!(sprite_scanline[i] & (1 << 31)))
             continue;
-        uint32_t color = 0xFF000000;
-        int r = (sprite_scanline[i] & 0x1F) << 3;
-        int g = ((sprite_scanline[i] >> 5) & 0x1F) << 3;
-        int b = ((sprite_scanline[i] >> 10) & 0x1F) << 3;
-        color |= r << 16;
-        color |= g << 8;
-        color |= b;
-        framebuffer[i + (gpu->get_VCOUNT() * PIXELS_PER_LINE)] = color;
+        draw_pixel(i, gpu->get_VCOUNT(), sprite_scanline[i] & 0x7FFF, 4);
     }
 }
 
@@ -1053,16 +997,20 @@ void GPU_2D_Engine::draw_scanline()
     {
         framebuffer[i + line] = 0xFF000000;
         front_framebuffer[i + line] = 0xFF000000;
+        second_layer[i] = 0;
     }
 
     for (int i = 0; i < PIXELS_PER_LINE * 2; i++)
+    {
+        layer_sources[i] = 0;
         final_bg_priority[i] = 0xFF;
-
+    }
     draw_backdrop();
     if (DISPCNT.display_win0 || DISPCNT.display_win1 || DISPCNT.obj_win_display)
         get_window_mask();
     else
         memset(window_mask, 0xFF, PIXELS_PER_LINE);
+    //TODO: handle mode 6 edge case
     for (int priority = 3; priority >= 0; priority--)
     {
         if (Config::bg_enable[3] && (BGCNT[3] & 0x3) == priority && DISPCNT.display_bg3)
@@ -1107,8 +1055,21 @@ void GPU_2D_Engine::draw_scanline()
         }
         if (Config::bg_enable[0] && (BGCNT[0] & 0x3) == priority && DISPCNT.display_bg0)
         {
-            if (engine_A && DISPCNT.bg_3d)
-                gpu->draw_3D_scanline(framebuffer, final_bg_priority, priority);
+            if (eng_3D && DISPCNT.bg_3d)
+            {
+                eng_3D->render_scanline();
+                uint32_t* bark = eng_3D->get_framebuffer();
+                for (int i = 0; i < PIXELS_PER_LINE; i++)
+                {
+                    if ((bark[i] & (1 << 31)))
+                    {
+                        layer_sources[i + 256] = layer_sources[i];
+                        layer_sources[i] = 1;
+                        framebuffer[i + (gpu->get_VCOUNT() * PIXELS_PER_LINE)] = bark[i];
+                        final_bg_priority[i] = BGCNT[0] & 0x3;
+                    }
+                }
+            }
             else
                 draw_bg_txt(0);
         }
@@ -1123,10 +1084,14 @@ void GPU_2D_Engine::draw_scanline()
             for (int i = 0; i < PIXELS_PER_LINE; i++)
                 front_framebuffer[i + line] = 0xFFF3F3F3;
             break;
-        //TODO: handle mode 6 edge case
         case 1:
             for (int i = 0; i < PIXELS_PER_LINE; i++)
-                front_framebuffer[i + line] = framebuffer[i + line];
+            {
+                uint8_t r = (framebuffer[i + line] >> 16) & 0x3F;
+                uint8_t g = (framebuffer[i + line] >> 8) & 0x3F;
+                uint8_t b = (framebuffer[i + line] & 0x3F);
+                front_framebuffer[i + line] = 0xFF000000 + ((r << 2) << 16) + ((g << 2) << 8) + (b << 2);
+            }
             break;
         case 2:
         {
@@ -1185,13 +1150,17 @@ void GPU_2D_Engine::draw_scanline()
             uint16_t* VRAM_dest = gpu->get_VRAM_block(DISPCAPCNT.VRAM_write_block);
             for (int x = 0; x < x_size; x++)
             {
-                //TODO: Add 3D only for source A, main mem FIFO for source B
-                uint32_t source_A = framebuffer[x + line];
+                //TODO: Add main mem FIFO for source B
+                uint32_t source_A;
+                if (DISPCAPCNT.A_3D_only)
+                    source_A = eng_3D->get_framebuffer()[x];
+                else
+                    source_A = framebuffer[x + line];
                 uint32_t source_B;
                 uint16_t* VRAM = gpu->get_VRAM_block(DISPCNT.VRAM_block);
                 source_B = VRAM[(read_offset + x) & 0xFFFF];
 
-                int ra = (source_A >> 19) & 0x1F, ga = (source_A >> 11) & 0x1F, ba = (source_A >> 3) & 0x1F;
+                int ra = (source_A >> 17) & 0x1F, ga = (source_A >> 9) & 0x1F, ba = (source_A >> 1) & 0x1F;
                 int rb = source_B & 0x1F, gb = (source_B >> 5) & 0x1F, bb = (source_B >> 10) & 0x1F;
                 int rd, gd, bd;
 
@@ -1282,7 +1251,64 @@ void GPU_2D_Engine::draw_scanline()
 
 void GPU_2D_Engine::handle_BLDCNT_effects()
 {
-    //TODO
+    int scanline = gpu->get_VCOUNT() * PIXELS_PER_LINE;
+    for (int pixel = 0; pixel < PIXELS_PER_LINE; pixel++)
+    {
+        uint8_t r = (framebuffer[pixel + scanline] >> 16) & 0x3F;
+        uint8_t g = (framebuffer[pixel + scanline] >> 8) & 0x3F;
+        uint8_t b = framebuffer[pixel + scanline] & 0x3F;
+        uint16_t blend_factor = BLDY;
+        if (blend_factor > 16)
+            blend_factor = 16;
+        int effect;
+        uint16_t BLD_flags = get_BLDCNT();
+        if (!(window_mask[pixel] & 0x20))
+            effect = 0;
+        else if (layer_sources[pixel] & (BLD_flags & 0xFF))
+        {
+            if (BLDCNT.effect == 1 && (layer_sources[pixel + 256] & (BLD_flags >> 8)))
+                effect = 1;
+            else if (BLDCNT.effect >= 2)
+                effect = BLDCNT.effect;
+            else
+                effect = 0;
+        }
+
+        else
+            effect = 0;
+
+        switch (effect)
+        {
+            case 1:
+            {
+                uint8_t r2 = (second_layer[pixel] >> 16) & 0x3F;
+                uint8_t g2 = (second_layer[pixel] >> 8) & 0x3F;
+                uint8_t b2 = second_layer[pixel] & 0x3F;
+                int eva = BLDALPHA & 0x1F;
+                int evb = (BLDALPHA >> 8) & 0x1F;
+                if (eva > 16)
+                    eva = 16;
+                if (evb > 16)
+                    evb = 16;
+
+                r = std::min(63, ((r * eva) + (r2 * evb)) >> 4);
+                g = std::min(63, ((g * eva) + (g2 * evb)) >> 4);
+                b = std::min(63, ((b * eva) + (b2 * evb)) >> 4);
+            }
+                break;
+            case 2:
+                r += ((63 - r) * blend_factor) >> 4;
+                g += ((63 - g) * blend_factor) >> 4;
+                b += ((63 - b) * blend_factor) >> 4;
+                break;
+            case 3:
+                r -= (r * blend_factor) >> 4;
+                g -= (g * blend_factor) >> 4;
+                b -= (b * blend_factor) >> 4;
+                break;
+        }
+        framebuffer[pixel + scanline] = 0xFF000000 | (r << 16) | (g << 8) | b;
+    }
 }
 
 void GPU_2D_Engine::get_framebuffer(uint32_t* buffer)
@@ -1433,6 +1459,11 @@ uint32_t GPU_2D_Engine::get_DISPCAPCNT()
     reg |= DISPCAPCNT.capture_source << 29;
     reg |= DISPCAPCNT.enable_busy << 31;
     return reg;
+}
+
+void GPU_2D_Engine::set_eng_3D(GPU_3D *eng_3D)
+{
+    this->eng_3D = eng_3D;
 }
 
 //TODO: handle forced blank bit 7?
@@ -1600,6 +1631,7 @@ void GPU_2D_Engine::set_BLDALPHA(uint16_t halfword)
 
 void GPU_2D_Engine::set_BLDY(uint8_t byte)
 {
+    printf("\nSet BLDY: $%02X", byte);
     BLDY = byte;
 }
 

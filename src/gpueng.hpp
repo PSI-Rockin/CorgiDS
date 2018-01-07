@@ -81,12 +81,16 @@ struct BLDCNT_REG
 };
 
 class GPU;
+class GPU_3D;
 
 class GPU_2D_Engine
 {
     private:
         GPU* gpu;
+        GPU_3D* eng_3D;
         uint32_t framebuffer[PIXELS_PER_LINE * SCANLINES], front_framebuffer[PIXELS_PER_LINE * SCANLINES];
+        uint32_t second_layer[PIXELS_PER_LINE];
+        uint8_t layer_sources[PIXELS_PER_LINE * 2];
         uint8_t final_bg_priority[PIXELS_PER_LINE * 2];
         uint32_t sprite_scanline[PIXELS_PER_LINE * 2];
         uint8_t window_mask[PIXELS_PER_LINE];
@@ -125,6 +129,7 @@ class GPU_2D_Engine
         uint16_t MASTER_BRIGHT;
 
         void draw_ext_text(int index);
+        void draw_pixel(int x, int y, uint16_t color, int source);
         void get_window_mask();
         void handle_BLDCNT_effects();
     public:
@@ -159,6 +164,8 @@ class GPU_2D_Engine
 
         uint16_t get_MASTER_BRIGHT();
         uint32_t get_DISPCAPCNT();
+
+        void set_eng_3D(GPU_3D* eng_3D);
 
         void set_DISPCNT_lo(uint16_t halfword);
         void set_DISPCNT(uint32_t word);

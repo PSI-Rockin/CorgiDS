@@ -149,7 +149,7 @@ int64_t GPU_3D::interpolate(uint64_t pixel, uint64_t pixel_range, int64_t u1, in
 
 //((1-a)(u0*w1) + a(u1*w0)) / ((1-a)*w1 + a*w0)
 //finalZ = (((vertexZ * 0x4000) / vertexW) + 0x3FFF) * 0x200
-void GPU_3D::render_scanline(uint32_t* framebuffer, uint8_t bg_priorities[256], uint8_t bg0_priority)
+void GPU_3D::render_scanline()
 {
     int line = gpu->get_VCOUNT();
     //Draw the rear-plane
@@ -158,6 +158,7 @@ void GPU_3D::render_scanline(uint32_t* framebuffer, uint8_t bg_priorities[256], 
     bool rear_plane_fog = CLEAR_COLOR & (1 << 15);
     for (int i = 0; i < PIXELS_PER_LINE; i++)
     {
+        framebuffer[i] = 0;
         z_buffer[line][i] = rear_z;
         trans_poly_ids[i] = 0xFF;
         fog_flags[i] = rear_plane_fog;
@@ -668,9 +669,9 @@ void GPU_3D::render_scanline(uint32_t* framebuffer, uint8_t bg_priorities[256], 
             {
                 case 0:
                 case 3:
-                    r = (((tr + 1) * (vr + 1) - 1) / 64) << 2;
-                    g = (((tg + 1) * (vg + 1) - 1) / 64) << 2;
-                    b = (((tb + 1) * (vb + 1) - 1) / 64) << 2;
+                    r = (((tr + 1) * (vr + 1) - 1) / 64);
+                    g = (((tg + 1) * (vg + 1) - 1) / 64);
+                    b = (((tb + 1) * (vb + 1) - 1) / 64);
                     alpha = (((ta + 1) * (va + 1) - 1)) / 32;
                     break;
                 case 2:
@@ -694,9 +695,9 @@ void GPU_3D::render_scanline(uint32_t* framebuffer, uint8_t bg_priorities[256], 
                         if (vb)
                             vb++;
                     }
-                    r = (((tr + 1) * (vr + 1) - 1) / 64) << 2;
-                    g = (((tg + 1) * (vg + 1) - 1) / 64) << 2;
-                    b = (((tb + 1) * (vb + 1) - 1) / 64) << 2;
+                    r = (((tr + 1) * (vr + 1) - 1) / 64);
+                    g = (((tg + 1) * (vg + 1) - 1) / 64);
+                    b = (((tb + 1) * (vb + 1) - 1) / 64);
                     alpha = (((ta + 1) * (va + 1) - 1)) / 32;
                     break;
                 default:
@@ -719,9 +720,9 @@ void GPU_3D::render_scanline(uint32_t* framebuffer, uint8_t bg_priorities[256], 
 
                 trans_poly_ids[x] = current_poly->attributes.id;
 
-                int pr = (framebuffer[x + y_coord] >> 16) & 0xFF;
-                int pg = (framebuffer[x + y_coord] >> 8) & 0xFF;
-                int pb = framebuffer[x + y_coord] & 0xFF;
+                int pr = (framebuffer[x] >> 16) & 0x3F;
+                int pg = (framebuffer[x] >> 8) & 0x3F;
+                int pb = framebuffer[x] & 0x3F;
 
                 r = (((alpha + 1) * r) + (31 - alpha) * pr) / 32;
                 g = (((alpha + 1) * g) + (31 - alpha) * pg) / 32;
@@ -732,14 +733,12 @@ void GPU_3D::render_scanline(uint32_t* framebuffer, uint8_t bg_priorities[256], 
             final_color |= g << 8;
             final_color |= b;
 
-            framebuffer[x + y_coord] = 0xFF000000 + final_color;
-            bg_priorities[x] = bg0_priority;
+            framebuffer[x] = 0xFF000000 + final_color;
             fog_flags[x] = current_poly->attributes.fog_enable;
         }
     }
     if (DISP3DCNT.fog_enable)
     {
-        int y = (line * PIXELS_PER_LINE);
         for (int i = 0; i < PIXELS_PER_LINE; i++)
         {
             if (fog_flags[i])
@@ -765,17 +764,17 @@ void GPU_3D::render_scanline(uint32_t* framebuffer, uint8_t bg_priorities[256], 
                 if (!DISP3DCNT.fog_alpha_only)
                 {
                     uint32_t new_color = 0xFF000000;
-                    int fog_r = (FOG_COLOR & 0x1F) << 3;
-                    int fog_g = ((FOG_COLOR >> 5) & 0x1F) << 3;
-                    int fog_b = ((FOG_COLOR >> 10) & 0x1F) << 3;
-                    int poly_r = (framebuffer[i + y] >> 16) & 0xFF;
-                    int poly_g = (framebuffer[i + y] >> 8) & 0xFF;
-                    int poly_b = framebuffer[i + y] & 0xFF;
+                    int fog_r = (FOG_COLOR & 0x1F) << 1;
+                    int fog_g = ((FOG_COLOR >> 5) & 0x1F) << 1;
+                    int fog_b = ((FOG_COLOR >> 10) & 0x1F) << 1;
+                    int poly_r = (framebuffer[i] >> 16) & 0x3F;
+                    int poly_g = (framebuffer[i] >> 8) & 0x3F;
+                    int poly_b = framebuffer[i] & 0x3F;
 
                     new_color |= ((fog_r * density + poly_r * (128 - density)) / 128) << 16;
                     new_color |= ((fog_g * density + poly_g * (128 - density)) / 128) << 8;
                     new_color |= ((fog_b * density + poly_b * (128 - density)) / 128);
-                    framebuffer[i + y] = new_color;
+                    framebuffer[i] = new_color;
                 }
             }
         }
@@ -1997,6 +1996,11 @@ void GPU_3D::update_clip_mtx()
         }
         clip_dirty = false;
     }
+}
+
+uint32_t* GPU_3D::get_framebuffer()
+{
+    return (uint32_t*)&framebuffer;
 }
 
 uint16_t GPU_3D::get_DISP3DCNT()

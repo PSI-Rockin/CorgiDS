@@ -1,3 +1,5 @@
+#include <cstdio>
+#include <cstring>
 #include <fstream>
 #include <iomanip>
 #include "debugger.hpp"

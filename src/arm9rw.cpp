@@ -522,7 +522,7 @@ void Emulator::arm9_write_word(uint32_t address, uint32_t word)
             gpu.set_BLDALPHA_A(word >> 16);
             return;
         case 0x04000054:
-            gpu.set_BLDY_A(word & 0xF);
+            gpu.set_BLDY_A(word & 0x1F);
             return;
         case 0x04000058:
         case 0x0400005C:
@@ -756,7 +756,7 @@ void Emulator::arm9_write_word(uint32_t address, uint32_t word)
             gpu.set_BLDALPHA_B(word >> 16);
             return;
         case 0x04001054:
-            gpu.set_BLDY_B(word & 0xF);
+            gpu.set_BLDY_B(word & 0x1F);
             return;
         case 0x04001058:
         case 0x0400105C:
@@ -1021,7 +1021,7 @@ void Emulator::arm9_write_halfword(uint32_t address, uint16_t halfword)
             gpu.set_BLDALPHA_A(halfword);
             return;
         case 0x04000054:
-            gpu.set_BLDY_A(halfword);
+            gpu.set_BLDY_A(halfword & 0x1F);
             return;
         case 0x04000060:
             gpu.set_DISP3DCNT(halfword);
@@ -1226,7 +1226,7 @@ void Emulator::arm9_write_halfword(uint32_t address, uint16_t halfword)
             gpu.set_BLDALPHA_B(halfword);
             return;
         case 0x04001054:
-            gpu.set_BLDY_B(halfword);
+            gpu.set_BLDY_B(halfword & 0x1F);
             return;
         case 0x0400106C:
             gpu.set_MASTER_BRIGHT_B(halfword);
@@ -1323,7 +1323,7 @@ void Emulator::arm9_write_byte(uint32_t address, uint8_t byte)
             gpu.set_MOSAIC_B(byte);
             return;
         case 0x04001054:
-            gpu.set_BLDY_B(byte);
+            gpu.set_BLDY_B(byte & 0x1F);
             return;
     }
     if (address >= PALETTE_START && address < GBA_ROM_START)
