@@ -1,5 +1,5 @@
 /*
-    CorgiDS Copyright PSISP 2017
+    CorgiDS Copyright PSISP 2017-2018
     Licensed under the GPLv3
     See LICENSE.txt for details
 */
@@ -11,8 +11,6 @@ uint32_t Emulator::arm9_read_word(uint32_t address)
 {
     if (address >= 0xFFFF0000)
         return *(uint32_t*)&arm9_bios[address - 0xFFFF0000];
-    if (address == 0x021F6404)
-        printf("\nRead32 $%08X: $%08X", address, *(uint32_t*)&main_RAM[address & MAIN_RAM_MASK]);
     if (address >= MAIN_RAM_START && address < SHARED_WRAM_START)
         return *(uint32_t*)&main_RAM[address & MAIN_RAM_MASK];
     if ((address >= IO_REGS_START && address < GBA_ROM_START) || address == 0x021F6404)
@@ -168,8 +166,6 @@ uint16_t Emulator::arm9_read_halfword(uint32_t address)
 {
     if (address >= 0xFFFF0000)
         return *(uint16_t*)&arm9_bios[address - 0xFFFF0000];
-    if (address == 0x021F6404)
-        printf("\nRead16 $%08X: $%04X", address, *(uint16_t*)&main_RAM[address & MAIN_RAM_MASK]);
     if (address >= MAIN_RAM_START && address < SHARED_WRAM_START)
     {
         return *(uint16_t*)&main_RAM[address & MAIN_RAM_MASK];
@@ -334,8 +330,6 @@ uint16_t Emulator::arm9_read_halfword(uint32_t address)
 
 uint8_t Emulator::arm9_read_byte(uint32_t address)
 {
-    if (address == 0x021F6404)
-        printf("\nRead8 $%08X: $%02X", address, main_RAM[address & MAIN_RAM_MASK]);
     if (address >= MAIN_RAM_START && address < SHARED_WRAM_START)
     {
         return main_RAM[address & MAIN_RAM_MASK];
@@ -413,8 +407,6 @@ uint8_t Emulator::arm9_read_byte(uint32_t address)
 
 void Emulator::arm9_write_word(uint32_t address, uint32_t word)
 {
-    if (address == 0x021F6404)
-        printf("\nWrite32 $%08X: $%08X", address, word);
     if (address >= MAIN_RAM_START && address < SHARED_WRAM_START)
     {
         *(uint32_t*)&main_RAM[address & MAIN_RAM_MASK] = word;
@@ -862,8 +854,6 @@ void Emulator::arm9_write_halfword(uint32_t address, uint16_t halfword)
         if (Config::test)
             printf("\nWrite16: $%08X $%04X", address, halfword);
     }
-    if (address == 0x021F6404)
-        printf("\nWrite32 $%08X: $%04X", address, halfword);
     if (address >= MAIN_RAM_START && address < SHARED_WRAM_START)
     {
         *(uint16_t*)&main_RAM[address & MAIN_RAM_MASK] = halfword;
@@ -1250,8 +1240,6 @@ void Emulator::arm9_write_halfword(uint32_t address, uint16_t halfword)
 
 void Emulator::arm9_write_byte(uint32_t address, uint8_t byte)
 {
-    if (address == 0x021F6404)
-        printf("\nWrite32 $%08X: $%02X", address, byte);
     if (address >= MAIN_RAM_START && address < SHARED_WRAM_START)
     {
         main_RAM[address & MAIN_RAM_MASK] = byte;

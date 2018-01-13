@@ -1,3 +1,9 @@
+/*
+    CorgiDS Copyright PSISP 2017-2018
+    Licensed under the GPLv3
+    See LICENSE.txt for details
+*/
+
 #include <cstdio>
 #include <cstring>
 #include <fstream>

@@ -1,5 +1,5 @@
 /*
-    CorgiDS Copyright PSISP 2017
+    CorgiDS Copyright PSISP 2017-2018
     Licensed under the GPLv3
     See LICENSE.txt for details
 */
@@ -56,6 +56,7 @@ class EmuThread : public QThread
         void run() override;
     signals:
         void finished_frame(uint32_t* upper_buffer, uint32_t* lower_buffer);
+        void emulation_error(const char* message);
         void update_FPS(int FPS);
     public slots:
         void shutdown();

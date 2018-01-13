@@ -1,3 +1,9 @@
+/*
+    CorgiDS Copyright PSISP 2017-2018
+    Licensed under the GPLv3
+    See LICENSE.txt for details
+*/
+
 #ifndef DEBUGGER_HPP
 #define DEBUGGER_HPP
 #include <cstdint>

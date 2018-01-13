@@ -1,5 +1,5 @@
 /*
-    CorgiDS Copyright PSISP 2017
+    CorgiDS Copyright PSISP 2017-2018
     Licensed under the GPLv3
     See LICENSE.txt for details
 */
@@ -148,6 +148,7 @@ class GPU_3D
         uint32_t current_color;
         int16_t current_vertex[3];
         int16_t current_texcoords[2];
+        int16_t raw_texcoords[2];
 
         uint32_t z_buffer[SCANLINES][PIXELS_PER_LINE];
         uint8_t trans_poly_ids[PIXELS_PER_LINE];

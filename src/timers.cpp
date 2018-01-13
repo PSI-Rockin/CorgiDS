@@ -1,5 +1,5 @@
 /*
-    CorgiDS Copyright PSISP 2017
+    CorgiDS Copyright PSISP 2017-2018
     Licensed under the GPLv3
     See LICENSE.txt for details
 */
@@ -20,7 +20,7 @@ NDS_Timing::NDS_Timing(Emulator* e) : e(e)
 
 void NDS_Timing::overflow(int index)
 {
-    timers[index].counter = timers[index].reload_value;
+    timers[index].counter += timers[index].reload_value;
     
     if (timers[index].IRQ_on_overflow)
     {

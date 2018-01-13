@@ -1,5 +1,5 @@
 /*
-    CorgiDS Copyright PSISP 2017
+    CorgiDS Copyright PSISP 2017-2018
     Licensed under the GPLv3
     See LICENSE.txt for details
 */
@@ -69,6 +69,7 @@ class EmuWindow : public QMainWindow
         void touchscreen_event(int x, int y);
     public slots:
         void draw_frame(uint32_t* upper_buffer, uint32_t* lower_buffer);
+        void emulation_error(const char* message);
         void update_FPS(int FPS);
     private slots:
         void about();

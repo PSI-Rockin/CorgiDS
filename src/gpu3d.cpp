@@ -1,5 +1,5 @@
 /*
-    CorgiDS Copyright PSISP 2017
+    CorgiDS Copyright PSISP 2017-2018
     Licensed under the GPLv3
     See LICENSE.txt for details
 */
@@ -137,6 +137,8 @@ void GPU_3D::power_on()
 //TODO: apply the actual GPU algorithm, which takes shortcuts. This is the "normal" method
 int64_t GPU_3D::interpolate(uint64_t pixel, uint64_t pixel_range, int64_t u1, int64_t u2, int32_t w1, int32_t w2)
 {
+    if (!pixel_range)
+        return u1;
     int64_t bark = 0;
     bark = (pixel_range - pixel) * (u1 * w2);
     bark += pixel * (u2 * w1);
@@ -285,7 +287,7 @@ void GPU_3D::render_scanline()
 
             if (left_pixel >= 0)
             {
-                uint64_t line_len = (x2 - x1) + 1;
+                uint64_t line_len = (x2 - x1);
                 uint64_t left_pos = left_pixel - x1;
                 left_r = interpolate(left_pos, line_len, r1, r2, w1, w2);
                 left_g = interpolate(left_pos, line_len, g1, g2, w1, w2);
@@ -298,7 +300,7 @@ void GPU_3D::render_scanline()
 
             if (right_pixel >= 0)
             {
-                int line_len = (x2 - x1) + 1;
+                int line_len = (x2 - x1);
                 int right_pos = right_pixel - x1;
                 right_r = interpolate(right_pos, line_len, r1, r2, w1, w2);
                 right_g = interpolate(right_pos, line_len, g1, g2, w1, w2);
@@ -316,7 +318,7 @@ void GPU_3D::render_scanline()
         if (left_x < 0)
             left_x = 0;
 
-        int line_len = right_x - left_x + 1;
+        int line_len = right_x - left_x;
 
         //Calculate texture stuff in advance
         TEXIMAGE_PARAM_REG texparams = current_poly->texparams;
@@ -362,26 +364,9 @@ void GPU_3D::render_scanline()
                 va = current_poly->attributes.alpha;
             }
 
-            //printf("\nvr: $%08X vg: $%08X vb: $%08X", vr, vg, vb);
-
-            vr = interpolate(pix_pos, line_len, left_r, right_r, left_w, right_w) >> 4;
-            vg = interpolate(pix_pos, line_len, left_g, right_g, left_w, right_w) >> 4;
-            vb = interpolate(pix_pos, line_len, left_b, right_b, left_w, right_w) >> 4;
-
-            vr <<= 1;
-            vg <<= 1;
-            vb <<= 1;
-
-            vr += !(!vr);
-            vg += !(!vg);
-            vb += !(!vb);
-
-            /*if (vr)
-                vr++;
-            if (vg)
-                vg++;
-            if (vb)
-                vb++;*/
+            vr = interpolate(pix_pos, line_len, left_r, right_r, left_w, right_w) >> 3;
+            vg = interpolate(pix_pos, line_len, left_g, right_g, left_w, right_w) >> 3;
+            vb = interpolate(pix_pos, line_len, left_b, right_b, left_w, right_w) >> 3;
 
             uint32_t r, g, b;
             if (texture_mapping)
@@ -779,6 +764,13 @@ void GPU_3D::render_scanline()
                     int fog_g = ((FOG_COLOR >> 5) & 0x1F) << 1;
                     int fog_b = ((FOG_COLOR >> 10) & 0x1F) << 1;
                     int fog_a = ((FOG_COLOR >> 16) & 0x1F);
+
+                    if (fog_r)
+                        fog_r++;
+                    if (fog_g)
+                        fog_g++;
+                    if (fog_b)
+                        fog_b++;
                     int poly_r = (framebuffer[i] >> 16) & 0x3F;
                     int poly_g = (framebuffer[i] >> 8) & 0x3F;
                     int poly_b = framebuffer[i] & 0x3F;
@@ -1237,22 +1229,19 @@ void GPU_3D::exec_command()
                 break;
             case 0x22:
                 //printf("\nTEXCOORD: $%08X", cmd_params[0]);
-                current_texcoords[0] = cmd_params[0] & 0xFFFF;
-                current_texcoords[1] = cmd_params[0] >> 16;
+                raw_texcoords[0] = cmd_params[0] & 0xFFFF;
+                raw_texcoords[1] = cmd_params[0] >> 16;
                 if (TEXIMAGE_PARAM.transformation_mode == 1)
                 {
-                    int16_t texcoords[2];
-                    texcoords[0] = cmd_params[0] & 0xFFFF;
-                    texcoords[1] = cmd_params[0] >> 16;
-                    current_texcoords[0] = (texcoords[0] * texture_mtx.m[0][0] + texcoords[1] * texture_mtx.m[1][0]
+                    current_texcoords[0] = (raw_texcoords[0] * texture_mtx.m[0][0] + raw_texcoords[1] * texture_mtx.m[1][0]
                             + texture_mtx.m[2][0] + texture_mtx.m[3][0]) >> 12;
-                    current_texcoords[1] = (texcoords[0] * texture_mtx.m[0][1] + texcoords[1] * texture_mtx.m[1][1]
+                    current_texcoords[1] = (raw_texcoords[0] * texture_mtx.m[0][1] + raw_texcoords[1] * texture_mtx.m[1][1]
                             + texture_mtx.m[2][1] + texture_mtx.m[3][1]) >> 12;
                 }
                 else
                 {
-                    current_texcoords[0] = cmd_params[0] & 0xFFFF;
-                    current_texcoords[1] = cmd_params[0] >> 16;
+                    current_texcoords[0] = raw_texcoords[0];
+                    current_texcoords[1] = raw_texcoords[1];
                 }
                 break;
             case 0x23:
@@ -1798,20 +1787,20 @@ void GPU_3D::add_vertex()
 
     if (TEXIMAGE_PARAM.transformation_mode == 3)
     {
-        int16_t texcoords[2];
-        texcoords[0] = current_texcoords[0];
-        texcoords[1] = current_texcoords[1];
-        current_texcoords[0] = ((coords[0] * texture_mtx.m[0][0] + coords[1] * texture_mtx.m[1][0]
-                + coords[2] * texture_mtx.m[2][0]) >> 24) + texcoords[0];
-        current_texcoords[1] = ((coords[0] * texture_mtx.m[0][1] + coords[1] * texture_mtx.m[1][1]
-                + coords[2] * texture_mtx.m[2][1]) >> 24) + texcoords[1];
+        vtx->texcoords[0] = ((coords[0] * texture_mtx.m[0][0] + coords[1] * texture_mtx.m[1][0]
+                + coords[2] * texture_mtx.m[2][0]) >> 24) + raw_texcoords[0];
+        vtx->texcoords[1] = ((coords[0] * texture_mtx.m[0][1] + coords[1] * texture_mtx.m[1][1]
+                + coords[2] * texture_mtx.m[2][1]) >> 24) + raw_texcoords[1];
+    }
+    else
+    {
+        vtx->texcoords[0] = (int16_t)current_texcoords[0];
+        vtx->texcoords[1] = (int16_t)current_texcoords[1];
     }
 
     vtx->colors[0] = ((current_color & 0x1F) << 12) + 0xFFF;
     vtx->colors[1] = (((current_color >> 5) & 0x1F) << 12) + 0xFFF;
     vtx->colors[2] = (((current_color >> 10) & 0x1F) << 12) + 0xFFF;
-    vtx->texcoords[0] = (int16_t)current_texcoords[0];
-    vtx->texcoords[1] = (int16_t)current_texcoords[1];
     vtx->clipped = false;
 
     vertex_list_count++;
@@ -2284,13 +2273,12 @@ void GPU_3D::NORMAL()
     normal_vector[2] = (int16_t)(((cmd_params[0] >> 20) & 0x3FF) << 6) >> 6;
     if (TEXIMAGE_PARAM.transformation_mode == 2)
     {
-        int32_t texcoords[2];
-        texcoords[0] = current_texcoords[0];
-        texcoords[1] = current_texcoords[1];
-        current_texcoords[0] += (normal_vector[0] * texture_mtx.m[0][0] + normal_vector[1] * texture_mtx.m[1][0]
-                + normal_vector[2] * texture_mtx.m[2][0]) >> 21;
-        current_texcoords[1] += (normal_vector[0] * texture_mtx.m[0][1] + normal_vector[1] * texture_mtx.m[1][1]
-                + normal_vector[2] * texture_mtx.m[2][1]) >> 21;
+        current_texcoords[0] = raw_texcoords[0] +
+                (((int64_t)normal_vector[0] * texture_mtx.m[0][0] + (int64_t)normal_vector[1] * texture_mtx.m[1][0]
+                + (int64_t)normal_vector[2] * texture_mtx.m[2][0]) >> 21);
+        current_texcoords[1] = raw_texcoords[1] +
+                (((int64_t)normal_vector[0] * texture_mtx.m[0][1] + (int64_t)normal_vector[1] * texture_mtx.m[1][1]
+                + (int64_t)normal_vector[2] * texture_mtx.m[2][1]) >> 21);
     }
 
     int32_t normal[3];

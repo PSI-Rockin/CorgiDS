@@ -1,5 +1,5 @@
 /*
-    CorgiDS Copyright PSISP 2017
+    CorgiDS Copyright PSISP 2017-2018
     Licensed under the GPLv3
     See LICENSE.txt for details
 */
@@ -1008,6 +1008,27 @@ void GPU_2D_Engine::draw_sprites()
     }
 }
 
+void GPU_2D_Engine::draw_3D()
+{
+    eng_3D->render_scanline();
+    uint32_t* bark = eng_3D->get_framebuffer();
+    int x_offset = BGHOFS[0] & 0x1FF;
+    for (int i = 0; i < PIXELS_PER_LINE; i++, x_offset = (x_offset + 1) & 0x1FF)
+    {
+        if (x_offset >= PIXELS_PER_LINE)
+            continue;
+        if (!(window_mask[i] & 0x1))
+            continue;
+        if ((bark[x_offset] & (1 << 31)))
+        {
+            layer_sources[i + 256] = layer_sources[i];
+            layer_sources[i] = 0x41; //account for both BG0 and 3D
+            framebuffer[i + (gpu->get_VCOUNT() * PIXELS_PER_LINE)] = bark[x_offset];
+            final_bg_priority[i] = BGCNT[0] & 0x3;
+        }
+    }
+}
+
 void GPU_2D_Engine::draw_scanline()
 {
     int line = gpu->get_VCOUNT() * PIXELS_PER_LINE;
@@ -1075,18 +1096,7 @@ void GPU_2D_Engine::draw_scanline()
         {
             if (eng_3D && DISPCNT.bg_3d)
             {
-                eng_3D->render_scanline();
-                uint32_t* bark = eng_3D->get_framebuffer();
-                for (int i = 0; i < PIXELS_PER_LINE; i++)
-                {
-                    if ((bark[i] & (1 << 31)))
-                    {
-                        layer_sources[i + 256] = layer_sources[i];
-                        layer_sources[i] = 0x41; //account for both BG0 and 3D
-                        framebuffer[i + (gpu->get_VCOUNT() * PIXELS_PER_LINE)] = bark[i];
-                        final_bg_priority[i] = BGCNT[0] & 0x3;
-                    }
-                }
+                draw_3D();
             }
             else
                 draw_bg_txt(0);

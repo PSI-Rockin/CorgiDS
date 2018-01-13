@@ -1,5 +1,5 @@
 /*
-    CorgiDS Copyright PSISP 2017
+    CorgiDS Copyright PSISP 2017-2018
     Licensed under the GPLv3
     See LICENSE.txt for details
 */
@@ -88,6 +88,7 @@ int EmuWindow::initialize()
 
     connect(this, SIGNAL(shutdown()), &emuthread, SLOT(shutdown()));
     connect(&emuthread, SIGNAL(finished_frame(uint32_t*,uint32_t*)), this, SLOT(draw_frame(uint32_t*,uint32_t*)));
+    connect(&emuthread, SIGNAL(emulation_error(const char*)), this, SLOT(emulation_error(const char*)));
     connect(&emuthread, SIGNAL(update_FPS(int)), this, SLOT(update_FPS(int)));
     connect(this, SIGNAL(press_key(DS_KEYS)), &emuthread, SLOT(press_key(DS_KEYS)));
     connect(this, SIGNAL(release_key(DS_KEYS)), &emuthread, SLOT(release_key(DS_KEYS)));
@@ -122,6 +123,13 @@ void EmuWindow::paintEvent(QPaintEvent *event)
     painter.drawPixmap(0, menubar_height, upper_pixmap);
     painter.drawPixmap(0, SCANLINES + menubar_height, lower_pixmap);
     event->accept();
+}
+
+void EmuWindow::emulation_error(const char *message)
+{
+    QString error(message);
+    QMessageBox::critical(this, "Emulation Error", error);
+    audio->stop();
 }
 
 void EmuWindow::update_FPS(int FPS)

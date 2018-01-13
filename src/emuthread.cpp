@@ -1,10 +1,11 @@
 /*
-    CorgiDS Copyright PSISP 2017
+    CorgiDS Copyright PSISP 2017-2018
     Licensed under the GPLv3
     See LICENSE.txt for details
 */
 
 #include <chrono>
+#include <stdexcept>
 #include "config.hpp"
 #include "emuthread.hpp"
 
@@ -72,7 +73,15 @@ void EmuThread::run()
         else
         {
             auto last_update = chrono::system_clock::now();
-            e.run();
+            try
+            {
+                e.run();
+            }
+            catch (const char* error)
+            {
+                pause(GAME_NOT_STARTED);
+                emit emulation_error(error);
+            }
             frames++;
             e.get_upper_frame(upper_buffer);
             e.get_lower_frame(lower_buffer);

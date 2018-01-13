@@ -1,5 +1,5 @@
 /*
-    CorgiDS Copyright PSISP 2017
+    CorgiDS Copyright PSISP 2017-2018
     Licensed under the GPLv3
     See LICENSE.txt for details
 */
@@ -128,6 +128,7 @@ class GPU_2D_Engine
 
         uint16_t MASTER_BRIGHT;
 
+        void draw_3D();
         void draw_ext_text(int index);
         void draw_pixel(int x, int y, uint16_t color, int source);
         void get_window_mask();

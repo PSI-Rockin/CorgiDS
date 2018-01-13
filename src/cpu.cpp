@@ -1,5 +1,5 @@
 /*
-    CorgiDS Copyright PSISP 2017
+    CorgiDS Copyright PSISP 2017-2018
     Licensed under the GPLv3
     See LICENSE.txt for details
 */
@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <sstream>
+#include <stdexcept>
 #include "config.hpp"
 #include "cpu.hpp"
 #include "cpuinstrs.hpp"
@@ -299,7 +300,8 @@ void ARM_CPU::jp(uint32_t new_addr, bool change_thumb_state)
 
 void ARM_CPU::handle_UNDEFINED()
 {
-    printf("\nUNDEFINED bullshit!");
+    throw "Undefined instruction";
+    /*printf("\nUNDEFINED bullshit!");
     uint32_t value = CPSR.get();
     SPSR[static_cast<int>(PSR_MODE::UNDEFINED)].set(value);
 
@@ -307,7 +309,7 @@ void ARM_CPU::handle_UNDEFINED()
     update_reg_mode(PSR_MODE::UNDEFINED);
     CPSR.mode = PSR_MODE::UNDEFINED;
     CPSR.IRQ_disabled = true;
-    jp(exception_base + 0x04, true);
+    jp(exception_base + 0x04, true);*/
 }
 
 void ARM_CPU::handle_IRQ()
@@ -354,8 +356,7 @@ void ARM_CPU::update_reg_mode(PSR_MODE new_mode)
                 swap(regs[14], LR_und);
                 break;
             default:
-                printf("\nUnrecognized mode");
-                exit(1);
+                throw "Unrecognized PSR mode";
         }
 
         switch (new_mode)
@@ -385,8 +386,7 @@ void ARM_CPU::update_reg_mode(PSR_MODE new_mode)
                 swap(regs[14], LR_und);
                 break;
             default:
-                printf("\nUnrecognized mode");
-                exit(1);
+                throw "Unrecognized PSR mode";
         }
     }
 }
