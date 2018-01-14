@@ -5,7 +5,11 @@
 */
 
 #include <cstdio>
+#include <iomanip>
+#include <sstream>
 #include "bios.hpp"
+
+using namespace std;
 
 BIOS::BIOS()
 {
@@ -110,9 +114,8 @@ int BIOS::SWI7(ARM_CPU &arm7)
             get_CRC16(arm7);
             break;
         default:
-            printf("\nUnrecognized HLE SWI7 $%02X", opcode);
-            exit(1);
-            return 0;
+            printf("\nUnrecognized ARM9 SWI $%02X", opcode);
+            throw "Unrecognized ARM7 SWI";
     }
     return 1;
 }
@@ -135,9 +138,8 @@ int BIOS::SWI9(ARM_CPU &arm9)
             get_CRC16(arm9);
             break;
         default:
-            printf("Unrecognized HLE SWI9 $%02X", opcode);
-            exit(1);
-            return 0;
+            printf("\nUnrecognized ARM9 SWI $%02X", opcode);
+            throw "Unrecognized ARM9 SWI";
     }
     return 1;
 }

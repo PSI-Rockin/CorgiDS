@@ -128,8 +128,10 @@ void EmuWindow::paintEvent(QPaintEvent *event)
 void EmuWindow::emulation_error(const char *message)
 {
     QString error(message);
-    QMessageBox::critical(this, "Emulation Error", error);
     audio->stop();
+    QMessageBox::critical(this, "Emulation Error", error);
+    upper_pixmap = QPixmap();
+    update();
 }
 
 void EmuWindow::update_FPS(int FPS)

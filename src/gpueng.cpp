@@ -430,7 +430,6 @@ void GPU_2D_Engine::draw_bg_ext(int index)
             break;
         default:
             printf("\nUnrecognized extended mode %d", bg_mode);
-            exit(1);
     }
 }
 
@@ -1213,7 +1212,6 @@ void GPU_2D_Engine::draw_scanline()
                         break;
                     default:
                         printf("\nUnrecognized capture source %d", DISPCAPCNT.capture_source);
-                        //exit(1);
                         break;
                 }
 

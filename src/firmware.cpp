@@ -131,7 +131,7 @@ uint8_t Firmware::transfer_data(uint8_t input)
                     break;
                 default:
                     printf("Command $%02X not recognized in firmware", input);
-                    exit(3);
+                    throw "[FIRMWARE] Unrecognized command";
             }
             break;
     }

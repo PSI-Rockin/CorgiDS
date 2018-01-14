@@ -509,8 +509,7 @@ void Emulator::start_division()
             }
             break;
         default:
-            printf("\nUnrecogized division");
-            exit(1);
+            printf("\nUnrecogized division mode %d", mode);
     }
     //printf("\nDivision: %lld / %lld = %lld (%lld)", DIV_NUMER, DIV_DENOM, DIV_RESULT, DIV_REMRESULT);
 }

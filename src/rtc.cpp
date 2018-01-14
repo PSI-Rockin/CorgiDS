@@ -105,7 +105,7 @@ void RealTimeClock::interpret_input()
                     break;
                 default:
                     printf("\nUnrecognized read from RTC command %d", command);
-                    exit(1);
+                    throw "[RTC] Unrecognized read";
             }
         }
     }
@@ -152,7 +152,7 @@ void RealTimeClock::interpret_input()
                 break;
             default:
                 printf("\nUnrecognized write $%02X to RTC command %d", input, command);
-                exit(1);
+                throw "[RTC] Unrecognized write";
         }
     }
     input_index++;

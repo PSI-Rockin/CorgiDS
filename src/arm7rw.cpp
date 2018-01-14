@@ -661,8 +661,7 @@ void Emulator::arm7_write_byte(uint32_t address, uint8_t byte)
                     printf("\nIF: $%08X", int9_reg.IF);*/
                     break;
                 default:
-                    printf("\nUnrecognized HALTCNT state $%02X for ARM7", byte);
-                    exit(1);
+                    throw "Unrecognized HALTCNT state for ARM7";
             }
             return;
         case 0x04000500:

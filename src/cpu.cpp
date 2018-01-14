@@ -300,7 +300,7 @@ void ARM_CPU::jp(uint32_t new_addr, bool change_thumb_state)
 
 void ARM_CPU::handle_UNDEFINED()
 {
-    throw "Undefined instruction";
+    throw "[CPU] Undefined instruction";
     /*printf("\nUNDEFINED bullshit!");
     uint32_t value = CPSR.get();
     SPSR[static_cast<int>(PSR_MODE::UNDEFINED)].set(value);
@@ -665,7 +665,7 @@ bool ARM_CPU::check_condition(int condition)
             return false;
         default:
             printf("\nUnrecognized condition %d", condition);
-            exit(1);
+            throw "[CPU] Unrecognized condition code";
     }
 }
 
@@ -742,10 +742,7 @@ void ARM_CPU::add(uint32_t destination, uint32_t source, uint32_t operand, bool 
     if (destination == REG_PC)
     {
         if (set_condition_codes)
-        {
-            printf("Unsupported");
-            exit(1);
-        }
+            throw "[CPU] Op 'adds pc' unsupported";
         else
             jp(unsigned_result & 0xFFFFFFFF, true);
     }

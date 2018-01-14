@@ -133,7 +133,7 @@ void Interpreter::thumb_interpret(ARM_CPU &cpu)
             break;
         default:
             printf("\nUnrecognized Thumb opcode $%04X", cpu.get_current_instr());
-            exit(1);
+            cpu.handle_UNDEFINED();
     }
 }
 
@@ -260,7 +260,7 @@ void Interpreter::thumb_mov_shift(ARM_CPU &cpu)
             break;
         default:
             printf("Unrecognized opcode %d in thumb_mov_shift", opcode);
-            exit(2);
+            throw "[THUMB_INSTR] Unrecognized thumb_mov_shift opcode";
     }
     
     cpu.add_internal_cycles(1); //Extra cycle due to register shift
@@ -480,7 +480,6 @@ void Interpreter::thumb_alu_op(ARM_CPU &cpu)
             break;
         default:
             printf("\nInvalid thumb alu op %d", opcode);
-            exit(1);
     }
 }
 
@@ -535,7 +534,6 @@ void Interpreter::thumb_hi_reg_op(ARM_CPU &cpu)
             break;
         default:
             printf("High-reg Thumb opcode $%02X not recognized\n", opcode);
-            exit(2);
     }
 }
 
@@ -757,8 +755,7 @@ void Interpreter::thumb_load_store_sign_halfword(ARM_CPU &cpu)
         }
             break;
         default:
-            printf("Sign extended opcode %d not recognized", opcode);
-            exit(2);
+            printf("\nSign extended opcode %d not recognized", opcode);
     }
 }
 

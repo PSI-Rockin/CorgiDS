@@ -136,7 +136,7 @@ void CP15::mcr(int operation, int destination_reg, int ARM_reg_contents, int inf
             break;
         default:
             printf("\nUnrecognized MCR op $%03X", cp15_op);
-            exit(1);
+            throw "[CP15] Unrecognized MCR op";
     }
 }
 
@@ -159,7 +159,7 @@ uint32_t CP15::mrc(int operation, int source_reg, int info, int operand_reg)
             return dtcm_data;
         default:
             printf("\nUnrecognized MRC op $%03X", cp15_op);
-            exit(1);
+            throw "[CP15] Unrecognized MRC op";
     }
 }
 

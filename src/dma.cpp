@@ -131,7 +131,6 @@ void NDS_DMA::handle_event(SchedulerEvent &event)
                 break;
             default:
                 printf("\nUnrecognized DMA dest control %d", active_DMA->CNT.dest_control);
-                exit(1);
         }
         switch (active_DMA->CNT.source_control)
         {
@@ -146,7 +145,6 @@ void NDS_DMA::handle_event(SchedulerEvent &event)
                 break;
             default:
                 printf("\nUnrecognized DMA source control %d", active_DMA->CNT.source_control);
-                exit(1);
         }
         if (active_DMA->is_arm9 && active_DMA->CNT.timing == 7 && active_DMA->internal_len >= 112)
         {

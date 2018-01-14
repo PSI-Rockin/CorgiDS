@@ -43,111 +43,6 @@ void Interpreter::arm_interpret(ARM_CPU &cpu)
         if (cpu.check_condition(condition))
             arm_table[op](cpu, instruction);
     }
-    
-    /*if ((opcode == ARM_INSTR::BRANCH || opcode == ARM_INSTR::BRANCH_WITH_LINK) && condition == 15 && !cpu.get_id())
-    {
-        blx(cpu, instruction);
-        return;
-    }
-    if (cpu.can_disassemble())
-    {
-        printf("($%08X) ", instruction);
-        cpu.print_condition(condition);
-    }
-
-    if (!cpu.check_condition(condition))
-    {
-        if (cpu.can_disassemble())
-        {
-            printf(" skipped");
-            printf("\n");
-        }
-        return;
-    }
-    
-    switch (opcode)
-    {
-        case ARM_INSTR::DATA_PROCESSING:
-            data_processing(cpu, instruction);
-            break;
-        case ARM_INSTR::COUNT_LEADING_ZEROS:
-            count_leading_zeros(cpu, instruction);
-            break;
-        case ARM_INSTR::SATURATED_OP:
-            saturated_op(cpu, instruction);
-            break;
-        case ARM_INSTR::MULTIPLY:
-            multiply(cpu, instruction);
-            break;
-        case ARM_INSTR::MULTIPLY_LONG:
-            multiply_long(cpu, instruction);
-            break;
-        case ARM_INSTR::SIGNED_HALFWORD_MULTIPLY:
-            signed_halfword_multiply(cpu, instruction);
-            break;
-        case ARM_INSTR::SWAP:
-            swap(cpu, instruction);
-            break;
-        case ARM_INSTR::STORE_BYTE:
-            store_byte(cpu, instruction);
-            break;
-        case ARM_INSTR::LOAD_BYTE:
-            load_byte(cpu, instruction);
-            break;
-        case ARM_INSTR::STORE_WORD:
-            store_word(cpu, instruction);
-            break;
-        case ARM_INSTR::LOAD_WORD:
-            load_word(cpu, instruction);
-            break;
-        case ARM_INSTR::STORE_HALFWORD:
-            store_halfword(cpu, instruction);
-            break;
-        case ARM_INSTR::LOAD_HALFWORD:
-            load_halfword(cpu, instruction);
-            break;
-        case ARM_INSTR::LOAD_SIGNED_BYTE:
-            load_signed_byte(cpu, instruction);
-            break;
-        case ARM_INSTR::STORE_DOUBLEWORD:
-            store_doubleword(cpu, instruction);
-            break;
-        case ARM_INSTR::LOAD_SIGNED_HALFWORD:
-            load_signed_halfword(cpu, instruction);
-            break;
-        case ARM_INSTR::STORE_BLOCK:
-            store_block(cpu, instruction);
-            break;
-        case ARM_INSTR::LOAD_BLOCK:
-            load_block(cpu, instruction);
-            break;
-        case ARM_INSTR::BRANCH:
-            branch(cpu, instruction);
-            break;
-        case ARM_INSTR::BRANCH_WITH_LINK:
-            branch_link(cpu, instruction);
-            break;
-        case ARM_INSTR::BRANCH_EXCHANGE:
-            branch_exchange(cpu, instruction);
-            break;
-        case ARM_INSTR::BRANCH_LINK_EXCHANGE:
-            blx_reg(cpu, instruction);
-            break;
-        case ARM_INSTR::SWI:
-            if (cpu.can_disassemble())
-                printf("SWI $%02X", (instruction >> 16) & 0xFF);
-            cpu.handle_SWI();
-            break;
-        case ARM_INSTR::COP_REG_TRANSFER:
-            coprocessor_reg_transfer(cpu, instruction);
-            break;
-        default:
-            printf("\nUnrecognized ARM opcode $%08X (instruction code %d)", instruction, opcode);
-            exit(1);
-    }
-    
-    if (cpu.can_disassemble())
-        printf("\n");*/
 }
 
 void Interpreter::undefined(ARM_CPU &cpu, uint32_t instruction)
@@ -307,7 +202,7 @@ uint32_t Interpreter::load_store_shift_reg(ARM_CPU& cpu, uint32_t instruction)
             break;
         default:
             printf("Invalid load/store shift: %d", shift_type);
-            exit(1);
+            throw "[ARM_INSTR] Invalid load/store shift";
     }
     
     return reg;
@@ -394,7 +289,7 @@ void Interpreter::data_processing(ARM_CPU &cpu, uint32_t instruction)
                 break;
             default:
                 printf("\nInvalid data processing shift: %d", shift_type);
-                exit(1);
+                throw "[ARM_INSTR] Invalid data processing shift";
         }
     }
     
@@ -503,7 +398,6 @@ void Interpreter::data_processing(ARM_CPU &cpu, uint32_t instruction)
             break;
         default:
             printf("Data processing opcode $%01X not recognized\n", opcode);
-            exit(2);
     }
 }
 
@@ -613,7 +507,7 @@ void Interpreter::saturated_op(ARM_CPU &cpu, uint32_t instruction)
             break;*/
         default:
             printf("\nUnrecognized saturated opcode %d", opcode);
-            exit(1);
+            throw "[ARM_INSTR] Unrecognized sat op";
     }
 }
 
@@ -779,7 +673,7 @@ void Interpreter::signed_halfword_multiply(ARM_CPU &cpu, uint32_t instruction)
             break;
         default:
             printf("\nUnrecognized smul opcode $%01X", opcode);
-            exit(1);
+            throw "[ARM_INSTR] Unrecognized smul op";
     }
 
     cpu.set_register(destination, result);
@@ -1276,7 +1170,7 @@ void Interpreter::store_doubleword(ARM_CPU &cpu, uint32_t instruction)
     else
     {
         printf("STRD postindexing not supported");
-        exit(1);
+        throw "[ARM_INSTR] STD postindexing not supported";
     }
 }
 
@@ -1322,7 +1216,7 @@ void Interpreter::load_doubleword(ARM_CPU &cpu, uint32_t instruction)
     else
     {
         printf("LDRD postindexing not supported");
-        exit(1);
+        throw "[ARM_INSTR] LDRD postindexing not supported";
     }
 }
 
@@ -1661,7 +1555,7 @@ void Interpreter::coprocessor_reg_transfer(ARM_CPU &cpu, uint32_t instruction)
             }
             default:
                 printf("Coprocessor %d not recognized", coprocessor_id);
-                exit(1);
+                throw "[ARM_INSTR] Unrecognized MRC cop id";
         }
     }
     else
@@ -1680,7 +1574,7 @@ void Interpreter::coprocessor_reg_transfer(ARM_CPU &cpu, uint32_t instruction)
             }
             default:
                 printf("Coprocessor %d not recognized", coprocessor_id);
-                exit(1);
+                throw "[ARM_INSTR] Unrecognized MCR cop id";
         }
     }
 }

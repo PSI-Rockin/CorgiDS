@@ -365,7 +365,7 @@ void NDS_Cart::run(int cycles)
                 printf("\nCommand $%02X%02X%02X%02X%02X%02X%02X%02X to cartridge not recognized",
                        command_buffer[0], command_buffer[1], command_buffer[2], command_buffer[3],
                        command_buffer[4], command_buffer[5], command_buffer[6], command_buffer[7]);
-                //exit(3);
+                throw "[CART] Unknown command sent";
         }
         bytes_left -= 4;
         e->gamecart_DMA_request();
@@ -738,10 +738,7 @@ void NDS_Cart::set_ROMCTRL(uint32_t value)
                 ROM_data_index |= (command_buffer[3] << 8);
                 ROM_data_index |= (command_buffer[4]);
                 if (bytes_left > 0x1000)
-                {
-                    printf("\nROM read bytes left > 0x1000");
-                    exit(1);
-                }
+                    throw "[CART] ROM read bytes left > 0x1000";
                 break;
             case 0xB8:
                 command_id = CART_COMMAND::GET_CHIP_ID;

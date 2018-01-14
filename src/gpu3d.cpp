@@ -586,7 +586,7 @@ void GPU_3D::render_scanline()
                                 break;
                             default:
                                 printf("\nUnrecognized 4x4 texel data type %d", data);
-                                exit(1);
+                                throw "[3D] Unrecognized 4x4 texel data type";
                         }
 
                         tr = (color & 0x1F) << 1;
@@ -635,7 +635,6 @@ void GPU_3D::render_scanline()
                         break;
                     default:
                         printf("\nUnrecognized texture format %d", current_poly->texparams.format);
-                        exit(1);
                 }
             }
 
@@ -689,7 +688,7 @@ void GPU_3D::render_scanline()
                     break;
                 default:
                     printf("\nUnrecognized polygon rendering mode %d", current_poly->attributes.polygon_mode);
-                    exit(1);
+                    throw "[3D] Unrecognized polygon rendering mode";
             }
 
             if (!alpha)
@@ -1001,7 +1000,6 @@ void GPU_3D::exec_command()
                         break;
                     default:
                         printf("\nUnrecognized MTX_MODE %d for MTX_POP", MTX_MODE);
-                        exit(1);
                 }
             }
                 break;
@@ -1029,7 +1027,6 @@ void GPU_3D::exec_command()
                         break;
                     default:
                         printf("\nUnrecognized MTX_MODE %d for MTX_STORE", MTX_MODE);
-                        exit(1);
                 }
             }
                 break;
@@ -1060,7 +1057,6 @@ void GPU_3D::exec_command()
                         break;
                     default:
                         printf("\nUnrecognized MTX_MODE %d for MTX_RESTORE", MTX_MODE);
-                        exit(1);
                 }
                 break;
             case 0x15:
@@ -1096,7 +1092,6 @@ void GPU_3D::exec_command()
                         break;
                     default:
                         printf("\nUnrecognized MTX_MODE %d in MTX_LOAD_4x4", MTX_MODE);
-                        exit(1);
                 }
                 for (int i = 0; i < 4; i++)
                 {
@@ -1139,7 +1134,6 @@ void GPU_3D::exec_command()
                         break;
                     default:
                         printf("\nUnrecognized MTX_MODE %d for MTX_LOAD_4x3", MTX_MODE);
-                        exit(1);
                 }
                 current_mtx->m[0][0] = (int32_t)cmd_params[0];
                 current_mtx->m[0][1] = (int32_t)cmd_params[1];
@@ -1368,7 +1362,7 @@ void GPU_3D::exec_command()
                 break;
             default:
                 printf("\nUnrecognized GXFIFO command $%02X", cmd.command);
-                //exit(1);
+                throw "[3D] Unrecognized GXFIFO command";
         }
         cmd_param_count = 0;
     }
@@ -1488,10 +1482,7 @@ void GPU_3D::clip_vertex(int plane, Vertex &v_list, Vertex &v_out, Vertex *v_in,
     int32_t factor_den = factor_num - (v_out.coords[3] - (side * v_out.coords[plane]));
 
     if (factor_den == 0)
-    {
-        printf("\nError: factor_den equals zero!");
-        exit(1);
-    }
+        throw "[3D] factor_den equals zero";
 
 #define INTERPOLATE(var) v_list.var = (v_in->var + ((v_out.var - v_in->var) * factor_num) / factor_den);
 
@@ -1518,10 +1509,7 @@ void GPU_3D::clip_vertex(int plane, Vertex &v_list, Vertex &v_out, Vertex *v_in,
 void GPU_3D::add_polygon()
 {
     if (vertex_list_count < 3 || vertex_list_count > 4)
-    {
-        printf("\nError: add_polygon called with invalid vertex_list_count");
-        exit(1);
-    }
+        throw "[3D] add_polygon called with invalid vertex_list_count";
     //Cull front/back face polygons
     int64_t normal_x, normal_y, normal_z;
 
@@ -1855,7 +1843,6 @@ void GPU_3D::add_vertex()
             break;
         default:
             printf("\nUnrecognized POLYGON_TYPE %d", POLYGON_TYPE);
-            exit(1);
     }
 }
 
@@ -1960,7 +1947,6 @@ void GPU_3D::MTX_MULT(bool update_vector)
             break;
         default:
             printf("\nUnrecognized MTX_MODE %d in MTX_MULT", MTX_MODE);
-            exit(1);
     }
 
     temp.set(*target);
@@ -2165,7 +2151,6 @@ void GPU_3D::MTX_PUSH()
             break;
         default:
             printf("\nUnrecognized MTX_MODE %d for MTX_PUSH", MTX_MODE);
-            exit(1);
     }
 }
 
@@ -2181,7 +2166,6 @@ void GPU_3D::MTX_POP(uint32_t word)
             break;
         default:
             printf("\nUnrecognized MTX_MODE %d for MTX_POP", MTX_MODE);
-            exit(1);
     }
 }
 
@@ -2205,7 +2189,6 @@ void GPU_3D::MTX_IDENTITY()
             break;
         default:
             printf("\nUnrecognized MTX_MODE %d in MTX_IDENTITY", MTX_MODE);
-            exit(1);
     }
 }
 
