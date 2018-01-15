@@ -22,13 +22,13 @@ SOURCES += \
     ../src/dma.cpp \
     ../src/firmware.cpp \
     ../src/instrthumb.cpp \
-    ../src/main.cpp \
+    ../src/qt/main.cpp \
     ../src/rtc.cpp \
     ../src/spi.cpp \
     ../src/timers.cpp \
     ../src/emulator.cpp \
-    ../src/emuwindow.cpp \
-    ../src/configwindow.cpp \
+    ../src/qt/emuwindow.cpp \
+    ../src/qt/configwindow.cpp \
     ../src/config.cpp \
     ../src/gpu.cpp \
     ../src/arm9rw.cpp \
@@ -37,14 +37,14 @@ SOURCES += \
     ../src/spu.cpp \
     ../src/wifi.cpp \
     ../src/touchscreen.cpp \
-    ../src/debugwindow.cpp \
+    ../src/qt/debugwindow.cpp \
     ../src/disasm_arm.cpp \
     ../src/gpueng.cpp \
     ../src/gpu3d.cpp \
     ../src/armtable.cpp \
-    ../src/emuthread.cpp \
+    ../src/qt/emuthread.cpp \
     ../src/bios.cpp \
-    ../src/audiodevice.cpp \
+    ../src/qt/audiodevice.cpp \
     ../src/disasm_thumb.cpp \
     ../src/debugger.cpp
 
@@ -65,23 +65,23 @@ HEADERS += \
     ../src/rtc.hpp \
     ../src/spi.hpp \
     ../src/timers.hpp \
-    ../src/emuwindow.hpp \
-    ../src/configwindow.hpp \
+    ../src/qt/emuwindow.hpp \
+    ../src/qt/configwindow.hpp \
     ../src/config.hpp \
     ../src/gpu.hpp \
     ../src/ipc.hpp \
     ../src/spu.hpp \
     ../src/wifi.hpp \
     ../src/touchscreen.hpp \
-    ../src/debugwindow.hpp \
+    ../src/qt/debugwindow.hpp \
     ../src/disassembler.hpp \
     ../src/gpueng.hpp \
     ../src/gpu3d.hpp \
-    ../src/emuthread.hpp \
+    ../src/qt/emuthread.hpp \
     ../src/bios.hpp \
-    ../src/audiodevice.hpp \
+    ../src/qt/audiodevice.hpp \
     ../src/debugger.hpp
 
 FORMS += \
-    ../src/configwindow.ui \
-    ../src/debugwindow.ui
+    ../src/qt/configwindow.ui \
+    ../src/qt/debugwindow.ui

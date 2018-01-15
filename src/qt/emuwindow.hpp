@@ -15,8 +15,8 @@
 #include <QMouseEvent>
 #include <QLabel>
 #include <QPaintEvent>
+#include "../config.hpp"
 #include "audiodevice.hpp"
-#include "config.hpp"
 #include "configwindow.hpp"
 #include "emuthread.hpp"
 

@@ -11,7 +11,7 @@
 #include <QMessageBox>
 #include <QPainter>
 #include <cstdio>
-#include "config.hpp"
+#include "../config.hpp"
 #include "emuwindow.hpp"
 
 EmuWindow::EmuWindow(QWidget *parent) : QMainWindow(parent)

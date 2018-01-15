@@ -8,7 +8,7 @@
 #define EMUTHREAD_HPP
 #include <QMutex>
 #include <QThread>
-#include "emulator.hpp"
+#include "../emulator.hpp"
 
 enum DS_KEYS
 {

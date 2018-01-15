@@ -8,7 +8,7 @@
 #define AUDIODEVICE_HPP
 
 #include <QIODevice>
-#include "spu.hpp"
+#include "../spu.hpp"
 
 class AudioDevice : public QIODevice
 {

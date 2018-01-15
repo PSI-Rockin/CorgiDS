@@ -7,7 +7,7 @@
 #include "configwindow.hpp"
 #include "ui_configwindow.h"
 #include <QFileDialog>
-#include "config.hpp"
+#include "../config.hpp"
 
 ConfigWindow::ConfigWindow(QWidget *parent) :
     QWidget(parent),

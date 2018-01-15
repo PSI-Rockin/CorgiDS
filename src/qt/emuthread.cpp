@@ -6,7 +6,7 @@
 
 #include <chrono>
 #include <stdexcept>
-#include "config.hpp"
+#include "../config.hpp"
 #include "emuthread.hpp"
 
 using namespace std;
