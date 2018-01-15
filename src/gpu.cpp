@@ -599,6 +599,24 @@ uint8_t GPU::get_VRAMCNT_B()
     return reg;
 }
 
+uint8_t GPU::get_VRAMCNT_C()
+{
+    uint8_t reg = 0;
+    reg |= VRAMCNT_C.MST;
+    reg |= VRAMCNT_C.offset << 3;
+    reg |= VRAMCNT_C.enabled << 7;
+    return reg;
+}
+
+uint8_t GPU::get_VRAMCNT_D()
+{
+    uint8_t reg = 0;
+    reg |= VRAMCNT_D.MST;
+    reg |= VRAMCNT_D.offset << 3;
+    reg |= VRAMCNT_D.enabled << 7;
+    return reg;
+}
+
 uint16_t GPU::get_POWCNT1()
 {
     uint16_t reg = 0;

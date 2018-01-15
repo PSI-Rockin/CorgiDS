@@ -59,21 +59,26 @@ void GPU_2D_Engine::get_window_mask()
     int y1_1 = WIN1V >> 8, y2_1 = WIN1V & 0xFF;
     if (line == y1_0)
         win0_active = true;
-    else if (line == y2_0)
+    else if (line == y2_0 || (!line && y2_0 == 0xC0))
         win0_active = false;
 
     if (line == y1_1)
         win1_active = true;
-    else if (line == y2_1)
+    else if (line == y2_1 || (!line && y2_1 == 0xC0))
         win1_active = false;
 
     //Reset window mask to outside window
     for (int i = 0; i < PIXELS_PER_LINE; i++)
         window_mask[i] = get_WINOUT() & 0xFF;
 
-    if (DISPCNT.obj_win_display)
+    if (DISPCNT.obj_win_display && DISPCNT.display_obj)
     {
-        //TODO: WINOBJ
+        draw_sprites(true);
+        for (int x = 0; x < PIXELS_PER_LINE; x++)
+        {
+            if ((sprite_scanline[x] & 0x90000000) == 0x90000000)
+                window_mask[x] = get_WINOUT() >> 8;
+        }
     }
 
     if (DISPCNT.display_win1 && win1_active)
@@ -563,7 +568,7 @@ void GPU_2D_Engine::draw_ext_text(int index)
     }
 }
 
-void GPU_2D_Engine::draw_rotscale_sprite(uint16_t *attributes)
+void GPU_2D_Engine::draw_rotscale_sprite(uint16_t *attributes, bool objwin)
 {
     int flags = (1 << 31);
     const int sprite_sizes[3][8] =
@@ -641,6 +646,12 @@ void GPU_2D_Engine::draw_rotscale_sprite(uint16_t *attributes)
     int mode = (attributes[0] >> 10) & 0x3;
     if (mode == 1)
         flags |= (1 << 30);
+    if (mode == 2)
+    {
+        if (!objwin)
+            return;
+        flags |= (1 << 28); //objwin
+    }
     if (mode == 3)
     {
         return;
@@ -751,7 +762,7 @@ void GPU_2D_Engine::draw_rotscale_sprite(uint16_t *attributes)
     }
 }
 
-void GPU_2D_Engine::draw_sprites()
+void GPU_2D_Engine::draw_sprites(bool objwin)
 {
     uint16_t attributes[4];
     uint16_t colors[PIXELS_PER_LINE * 2];
@@ -797,7 +808,7 @@ void GPU_2D_Engine::draw_sprites()
 
             if (rotscale)
             {
-                draw_rotscale_sprite(attributes);
+                draw_rotscale_sprite(attributes, objwin);
                 continue;
             }
 
@@ -817,7 +828,14 @@ void GPU_2D_Engine::draw_sprites()
                 continue;
 
             if (mode == 1)
-                flags |= (1 << 30);
+                flags |= (1 << 30); //semitransparent
+
+            if (mode == 2)
+            {
+                if (!objwin)
+                    continue;
+                flags |= (1 << 28); //objwin
+            }
 
             if (mode == 3)
             {
@@ -989,20 +1007,23 @@ void GPU_2D_Engine::draw_sprites()
         }
     }
 
-    for (int i = 0; i < PIXELS_PER_LINE; i++)
+    if (!objwin)
     {
-        if (!(sprite_scanline[i] & (1 << 31)))
-            continue;
-        draw_pixel(i, gpu->get_VCOUNT(), sprite_scanline[i] & 0x7FFF, 4);
-        if (sprite_scanline[i] & (1 << 30))
+        for (int i = 0; i < PIXELS_PER_LINE; i++)
         {
-            layer_sources[i] |= 0x80; //semitransparent effect
-        }
-        if (sprite_scanline[i] & (1 << 29))
-        {
-            //bitmap alpha
-            layer_sources[i] = (sprite_scanline[i] >> 16) & 0x1F;
-            layer_sources[i] |= 0x80 | 0x40 | 0x10;
+            if (!(sprite_scanline[i] & (1 << 31)))
+                continue;
+            if (!(window_mask[i] & 0x10))
+                continue;
+            draw_pixel(i, gpu->get_VCOUNT(), sprite_scanline[i] & 0x7FFF, 4);
+            if (sprite_scanline[i] & (1 << 30))
+                layer_sources[i] |= 0x80; //semitransparent effect
+            if (sprite_scanline[i] & (1 << 29))
+            {
+                //bitmap alpha
+                layer_sources[i] = (sprite_scanline[i] >> 16) & 0x1F;
+                layer_sources[i] |= 0x80 | 0x40 | 0x10;
+            }
         }
     }
 }
@@ -1102,7 +1123,7 @@ void GPU_2D_Engine::draw_scanline()
         }
     }
     if (DISPCNT.display_obj)
-        draw_sprites();
+        draw_sprites(false);
     handle_BLDCNT_effects();
 
     switch (DISPCNT.display_mode)
@@ -1174,55 +1195,75 @@ void GPU_2D_Engine::draw_scanline()
             read_offset += line;
             write_offset = DISPCAPCNT.VRAM_write_offset * 0x4000;
             write_offset += line;
-            uint16_t* VRAM_dest = gpu->get_VRAM_block(DISPCAPCNT.VRAM_write_block);
-            for (int x = 0; x < x_size; x++)
+            uint8_t MST;
+            switch (DISPCAPCNT.VRAM_write_block)
             {
-                //TODO: Add main mem FIFO for source B
-                uint32_t source_A;
-                if (DISPCAPCNT.A_3D_only)
-                    source_A = eng_3D->get_framebuffer()[x];
-                else
-                    source_A = framebuffer[x + line];
-                uint32_t source_B;
-                uint16_t* VRAM = gpu->get_VRAM_block(DISPCNT.VRAM_block);
-                source_B = VRAM[(read_offset + x) & 0xFFFF];
-
-                int ra = (source_A >> 17) & 0x1F, ga = (source_A >> 9) & 0x1F, ba = (source_A >> 1) & 0x1F;
-                int rb = source_B & 0x1F, gb = (source_B >> 5) & 0x1F, bb = (source_B >> 10) & 0x1F;
-                int rd, gd, bd;
-
-                uint16_t color = 0;
-                switch (DISPCAPCNT.capture_source)
+                case 0:
+                    MST = gpu->get_VRAMCNT_A();
+                    break;
+                case 1:
+                    MST = gpu->get_VRAMCNT_B();
+                    break;
+                case 2:
+                    MST = gpu->get_VRAMCNT_C();
+                    break;
+                case 3:
+                    MST = gpu->get_VRAMCNT_D();
+                    break;
+            }
+            //VRAM_dest must be allocated as LCDC-VRAM
+            if (!(MST & 0x7))
+            {
+                uint16_t* VRAM_dest = gpu->get_VRAM_block(DISPCAPCNT.VRAM_write_block);
+                for (int x = 0; x < x_size; x++)
                 {
-                    case 0:
-                        rd = ra;
-                        gd = ga;
-                        bd = ba;
-                        break;
-                    case 1:
-                        rd = rb;
-                        gd = gb;
-                        bd = bb;
-                        break;
-                    case 2:
-                    case 3:
-                        rd = ((ra * DISPCAPCNT.EVA) + (rb * DISPCAPCNT.EVB)) / 16;
-                        gd = ((ga * DISPCAPCNT.EVA) + (gb * DISPCAPCNT.EVB)) / 16;
-                        bd = ((ba * DISPCAPCNT.EVA) + (bb * DISPCAPCNT.EVB)) / 16;
-                        break;
-                    default:
-                        printf("\nUnrecognized capture source %d", DISPCAPCNT.capture_source);
-                        break;
-                }
+                    //TODO: Add main mem FIFO for source B
+                    uint32_t source_A;
+                    if (DISPCAPCNT.A_3D_only)
+                        source_A = eng_3D->get_framebuffer()[x];
+                    else
+                        source_A = framebuffer[x + line];
+                    uint32_t source_B;
+                    uint16_t* VRAM = gpu->get_VRAM_block(DISPCNT.VRAM_block);
+                    source_B = VRAM[(read_offset + x) & 0xFFFF];
 
-                if (rd > 0x1F)
-                    rd = 0x1F;
-                if (gd > 0x1F)
-                    gd = 0x1F;
-                if (bd > 0x1F)
-                    bd = 0x1F;
-                color = rd | (gd << 5) | (bd << 10);
-                VRAM_dest[(write_offset + x) & 0xFFFF] = color | (1 << 15);
+                    int ra = (source_A >> 17) & 0x1F, ga = (source_A >> 9) & 0x1F, ba = (source_A >> 1) & 0x1F;
+                    int rb = source_B & 0x1F, gb = (source_B >> 5) & 0x1F, bb = (source_B >> 10) & 0x1F;
+                    int rd, gd, bd;
+
+                    uint16_t color = 0;
+                    switch (DISPCAPCNT.capture_source)
+                    {
+                        case 0:
+                            rd = ra;
+                            gd = ga;
+                            bd = ba;
+                            break;
+                        case 1:
+                            rd = rb;
+                            gd = gb;
+                            bd = bb;
+                            break;
+                        case 2:
+                        case 3:
+                            rd = ((ra * DISPCAPCNT.EVA) + (rb * DISPCAPCNT.EVB)) / 16;
+                            gd = ((ga * DISPCAPCNT.EVA) + (gb * DISPCAPCNT.EVB)) / 16;
+                            bd = ((ba * DISPCAPCNT.EVA) + (bb * DISPCAPCNT.EVB)) / 16;
+                            break;
+                        default:
+                            printf("\nUnrecognized capture source %d", DISPCAPCNT.capture_source);
+                            break;
+                    }
+
+                    if (rd > 0x1F)
+                        rd = 0x1F;
+                    if (gd > 0x1F)
+                        gd = 0x1F;
+                    if (bd > 0x1F)
+                        bd = 0x1F;
+                    color = rd | (gd << 5) | (bd << 10);
+                    VRAM_dest[(write_offset + x) & 0xFFFF] = color | (1 << 15);
+                }
             }
         }
     }

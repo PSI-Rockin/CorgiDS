@@ -1178,7 +1178,7 @@ void Interpreter::load_doubleword(ARM_CPU &cpu, uint32_t instruction)
 {
     if (cpu.get_id())
     {
-        cpu.handle_UNDEFINED();
+        //nop
         return;
     }
 
@@ -1215,8 +1215,14 @@ void Interpreter::load_doubleword(ARM_CPU &cpu, uint32_t instruction)
     }
     else
     {
-        printf("LDRD postindexing not supported");
-        throw "[ARM_INSTR] LDRD postindexing not supported";
+        cpu.set_register(dest, cpu.read_word(address));
+        cpu.set_register(dest + 1, cpu.read_word(address + 4));
+
+        if (add_offset)
+            address += offset;
+        else
+            address -= offset;
+        cpu.set_register(base, address);
     }
 }
 

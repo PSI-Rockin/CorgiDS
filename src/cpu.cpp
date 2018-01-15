@@ -241,14 +241,14 @@ void ARM_CPU::execute()
 {
     last_timestamp = timestamp;
     //TODO: replace these comparisons with a generic "halt state" variable
-    if (halted || e->DMA_active(cpu_id))
+    if (halted)
     {
         //Wait until next event
         timestamp = e->get_timestamp() << (1 - cpu_id);
         if (e->requesting_interrupt(cpu_id))
         {
             halted = false;
-            if (!CPSR.IRQ_disabled && !e->DMA_active(cpu_id))
+            if (!CPSR.IRQ_disabled)
                 handle_IRQ();
         }
         return;
@@ -258,8 +258,8 @@ void ARM_CPU::execute()
     if (!CPSR.thumb_on)
     {
         current_instr = read_word(regs[15] - 4);
-        if (Config::test)
-            e->mark_as_arm(regs[15] - 4);
+        //if (Config::test)
+            //e->mark_as_arm(regs[15] - 4);
         add_s32_code(regs[15] - 4, 1);
         regs[15] += 4;
         Interpreter::arm_interpret(*this);
@@ -267,8 +267,8 @@ void ARM_CPU::execute()
     else
     {
         current_instr = read_halfword(regs[15] - 2);
-        if (Config::test)
-            e->mark_as_thumb(regs[15] - 4);
+        //if (Config::test)
+            //e->mark_as_thumb(regs[15] - 4);
         add_s16_code(regs[15] - 2, 1);
         regs[15] += 2;
         Interpreter::thumb_interpret(*this);

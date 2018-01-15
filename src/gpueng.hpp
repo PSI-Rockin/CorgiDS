@@ -139,8 +139,8 @@ class GPU_2D_Engine
         void draw_bg_txt(int index);
         void draw_bg_aff(int index);
         void draw_bg_ext(int index);
-        void draw_sprites();
-        void draw_rotscale_sprite(uint16_t* attributes);
+        void draw_sprites(bool objwin);
+        void draw_rotscale_sprite(uint16_t* attributes, bool objwin);
         void draw_scanline();
 
         void get_framebuffer(uint32_t* buffer);
