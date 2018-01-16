@@ -102,8 +102,8 @@ struct Polygon
     uint32_t palette_base;
 
     bool translucent;
-
-
+    bool shadow_mask;
+    bool shadow_poly;
 };
 
 struct GX_Command
@@ -115,6 +115,14 @@ struct GX_Command
 class Emulator;
 
 class GPU;
+
+struct RenderAttr
+{
+    int trans_id;
+    bool translucent;
+    int opaque_id;
+    bool fog;
+};
 
 class GPU_3D
 {
@@ -151,12 +159,21 @@ class GPU_3D
         int16_t raw_texcoords[2];
 
         uint32_t z_buffer[SCANLINES][PIXELS_PER_LINE];
-        uint8_t trans_poly_ids[PIXELS_PER_LINE];
+
+        //Attribute buffer flags:
+        //0-4: trans poly id
+        //5: translucent
+        //6-11: opaque poly id
+        //12: fog
+        RenderAttr attr_buffer[PIXELS_PER_LINE];
 
         uint32_t FOG_COLOR;
         uint16_t FOG_OFFSET;
         uint8_t FOG_TABLE[32];
-        bool fog_flags[PIXELS_PER_LINE];
+
+        //Stencil buffer has two separate places for odd/even scanlines?
+        bool stencil_buffer[PIXELS_PER_LINE * 2];
+        bool previous_shadow_mask;
 
         bool swap_buffers;
 
@@ -224,7 +241,7 @@ class GPU_3D
         void clip_vertex(int plane, Vertex& v_list, Vertex& v_out, Vertex* v_in, int side, bool add_attributes);
         void add_vertex();
         void add_polygon();
-
+        void render_shadow_mask(Polygon* poly);
         void request_FIFO_DMA();
     public:
         GPU_3D(Emulator* e, GPU* gpu);

@@ -131,6 +131,8 @@ void GPU_3D::power_on()
     CLEAR_DEPTH = 0x7FFF;
 
     last_poly_strip = nullptr;
+    previous_shadow_mask = false;
+    memset(stencil_buffer, 0, sizeof(stencil_buffer));
 }
 
 //Applies perspective correction interpolation on a pixel with attributes u1, u2
@@ -164,8 +166,9 @@ void GPU_3D::render_scanline()
     {
         framebuffer[i] = rear_color;
         z_buffer[line][i] = rear_z;
-        trans_poly_ids[i] = 0xFF;
-        fog_flags[i] = rear_plane_fog;
+        attr_buffer[i].opaque_id = (CLEAR_COLOR >> 24) & 0x1F;
+        attr_buffer[i].fog = rear_plane_fog;
+        attr_buffer[i].translucent = false;
     }
     int y_coord = line * PIXELS_PER_LINE;
     for (int i = 0; i < rend_poly_count; i++)
@@ -174,8 +177,13 @@ void GPU_3D::render_scanline()
         if (line < current_poly->top_y || line > current_poly->bottom_y)
             continue;
 
-        if (current_poly->attributes.polygon_mode == 3)
-            continue; //TODO: shadow polygons
+        if (current_poly->shadow_mask)
+        {
+            render_shadow_mask(current_poly);
+            continue;
+        }
+
+        previous_shadow_mask = false;
 
         int left_x = 512, right_x = -512;
         uint32_t left_r = 0, left_g = 0, left_b = 0,
@@ -310,7 +318,6 @@ void GPU_3D::render_scanline()
                 right_s = (int16_t)interpolate(right_pos, line_len, s1, s2, w1, w2);
                 right_t = (int16_t)interpolate(right_pos, line_len, t1, t2, w1, w2);
             }
-            //printf("\nLeft r: $%08X Right r: $%08X", left_r, right_r);
         }
 
         if (right_x >= PIXELS_PER_LINE)
@@ -330,6 +337,10 @@ void GPU_3D::render_scanline()
         //Fill the polygon
         for (int x = left_x; x <= right_x; x++)
         {
+            //Check if stencil buffer is set
+            if (current_poly->shadow_poly && !stencil_buffer[x + (PIXELS_PER_LINE * (line & 0x1))])
+                continue;
+
             //Depth test
             int pix_pos = x - left_x;
             uint32_t pix_z = interpolate(pix_pos, line_len, left_z, right_z, left_w, right_w);
@@ -697,27 +708,48 @@ void GPU_3D::render_scanline()
             if (!current_poly->translucent || current_poly->attributes.set_new_trans_depth)
                 z_buffer[line][x] = pix_z;
 
-            if (DISP3DCNT.alpha_blending && current_poly->translucent)
+            if (current_poly->translucent)
             {
-                //printf("\nAlpha: $%02X", alpha);
-                //Don't draw translucent polygons over each other if they share the same ID
-                if (trans_poly_ids[x] == current_poly->attributes.id)
-                    continue;
-
-                trans_poly_ids[x] = current_poly->attributes.id;
-
-                int pa = (framebuffer[x] >> 24) & 0x1F;
-                int pr = (framebuffer[x] >> 16) & 0x3F;
-                int pg = (framebuffer[x] >> 8) & 0x3F;
-                int pb = framebuffer[x] & 0x3F;
-
-                if (pa)
+                if (DISP3DCNT.alpha_blending)
                 {
-                    r = (((alpha + 1) * r) + (31 - alpha) * pr) / 32;
-                    g = (((alpha + 1) * g) + (31 - alpha) * pg) / 32;
-                    b = (((alpha + 1) * b) + (31 - alpha) * pb) / 32;
-                    alpha = max(alpha, pa);
+                    if (current_poly->shadow_poly)
+                    {
+                        if (attr_buffer[x].translucent)
+                        {
+                            if (attr_buffer[x].trans_id == current_poly->attributes.id)
+                                continue;
+                        }
+                        else
+                        {
+                            if (attr_buffer[x].opaque_id == current_poly->attributes.id)
+                                continue;
+                        }
+                    }
+                    else
+                    {
+                        if (attr_buffer[x].translucent && attr_buffer[x].trans_id == current_poly->attributes.id)
+                            continue;
+                    }
+                    int pa = (framebuffer[x] >> 24) & 0x1F;
+                    int pr = (framebuffer[x] >> 16) & 0x3F;
+                    int pg = (framebuffer[x] >> 8) & 0x3F;
+                    int pb = framebuffer[x] & 0x3F;
+
+                    if (pa)
+                    {
+                        r = (((alpha + 1) * r) + (31 - alpha) * pr) / 32;
+                        g = (((alpha + 1) * g) + (31 - alpha) * pg) / 32;
+                        b = (((alpha + 1) * b) + (31 - alpha) * pb) / 32;
+                        alpha = max(alpha, pa);
+                    }
                 }
+                attr_buffer[x].translucent = true;
+                attr_buffer[x].trans_id = current_poly->attributes.id;
+            }
+            else
+            {
+                attr_buffer[x].translucent = false;
+                attr_buffer[x].opaque_id = current_poly->attributes.id;
             }
 
             if (alpha > 0x1F)
@@ -729,14 +761,14 @@ void GPU_3D::render_scanline()
             final_color |= b;
 
             framebuffer[x] = 0x80000000 + final_color;
-            fog_flags[x] = current_poly->attributes.fog_enable;
+            attr_buffer[x].fog = current_poly->attributes.fog_enable;
         }
     }
     if (DISP3DCNT.fog_enable)
     {
         for (int i = 0; i < PIXELS_PER_LINE; i++)
         {
-            if (fog_flags[i])
+            if (attr_buffer[i].fog)
             {
                 uint32_t z = z_buffer[line][i];
                 uint8_t density;
@@ -782,6 +814,149 @@ void GPU_3D::render_scanline()
                     framebuffer[i] = new_color;
                 }
             }
+        }
+    }
+}
+
+void GPU_3D::render_shadow_mask(Polygon *current_poly)
+{
+    //This is a copy-paste of the normal render function
+    //TODO: Move all this interpolation shit to a new function
+    int line = gpu->get_VCOUNT();
+    int stencil_offset = PIXELS_PER_LINE * (line & 0x1);
+    if (!previous_shadow_mask)
+        memset(stencil_buffer + stencil_offset, 0, PIXELS_PER_LINE);
+
+    previous_shadow_mask = true;
+
+    int left_x = 512, right_x = -512;
+    uint32_t left_z, right_z;
+    int32_t left_w, right_w;
+
+    //Figure out the leftmost/rightmost points on the polygon on this scanline
+    //Using a variation of Bresenham's line algorithm
+    for (int vert = 0; vert < current_poly->vert_count; vert++)
+    {
+        int vert2 = (vert + 1) % current_poly->vert_count;
+        int x1 = current_poly->vertices[vert]->final_pos[0],
+            y1 = current_poly->vertices[vert]->final_pos[1],
+            x2 = current_poly->vertices[vert2]->final_pos[0],
+            y2 = current_poly->vertices[vert2]->final_pos[1];
+
+        int32_t z1 = current_poly->final_z[vert],
+                z2 = current_poly->final_z[vert2];
+        int32_t w1 = current_poly->final_w[vert],
+                w2 = current_poly->final_w[vert2];
+
+        //Transpose steep lines (lines with a positive slope greater than one)
+        bool steep = abs(y2 - y1) > abs(x2 - x1);
+        if (steep)
+        {
+            swap(x1, y1);
+            swap(x2, y2);
+        }
+
+        //Draw lines left-to-right
+        if (x1 > x2)
+        {
+            swap(x1, x2);
+            swap(y1, y2);
+            swap(z1, z2);
+            swap(w1, w2);
+        }
+
+        int dx = x2 - x1;
+        int dy = abs(y2 - y1);
+
+        int error = dx / 2;
+        int y_step = (y1 < y2) ? 1 : -1;
+
+        int y = y1;
+
+        int left_pixel = -1;
+        int right_pixel = -1;
+        for (int x = x1; x <= x2; x++)
+        {
+            if (steep)
+            {
+                if (line == x)
+                {
+                    if (y < left_x)
+                    {
+                        left_x = y;
+                        left_pixel = x;
+                    }
+                    if (y > right_x)
+                    {
+                        right_x = y;
+                        right_pixel = x;
+                    }
+                }
+            }
+            else
+            {
+                if (line == y)
+                {
+                    if (x < left_x)
+                    {
+                        left_x = x;
+                        left_pixel = x;
+                    }
+                    if (x > right_x)
+                    {
+                        right_x = x;
+                        right_pixel = x;
+                    }
+                }
+            }
+            error -= dy;
+            if (error < 0)
+            {
+                y += y_step;
+                error += dx;
+            }
+        }
+
+        if (left_pixel >= 0)
+        {
+            uint64_t line_len = (x2 - x1);
+            uint64_t left_pos = left_pixel - x1;
+            left_z = interpolate(left_pos, line_len, z1, z2, w1, w2);
+            left_w = (int32_t)interpolate(left_pos, line_len, w1, w2, w1, w2);
+        }
+
+        if (right_pixel >= 0)
+        {
+            int line_len = (x2 - x1);
+            int right_pos = right_pixel - x1;
+            right_z = interpolate(right_pos, line_len, z1, z2, w1, w2);
+            right_w = (int32_t)interpolate(right_pos, line_len, w1, w2, w1, w2);
+        }
+    }
+
+    if (right_x >= PIXELS_PER_LINE)
+        right_x = PIXELS_PER_LINE - 1;
+    if (left_x < 0)
+        left_x = 0;
+
+    int line_len = right_x - left_x;
+    for (int x = left_x; x <= right_x; x++)
+    {
+        //Stencil buffer is only set when the depth test fails
+        int pix_pos = x - left_x;
+        uint32_t pix_z = interpolate(pix_pos, line_len, left_z, right_z, left_w, right_w);
+
+        if (current_poly->attributes.depth_test_equal)
+        {
+            uint32_t low_z = z_buffer[line][x] - 0x200;
+            uint32_t high_z = z_buffer[line][x] + 0x200;
+            if (pix_z < low_z || pix_z > high_z)
+                stencil_buffer[x + stencil_offset] = true;
+        }
+        else
+        {
+            if (pix_z >= z_buffer[line][x])
+                stencil_buffer[x + stencil_offset] = true;
         }
     }
 }
@@ -936,6 +1111,7 @@ void GPU_3D::write_command(GX_Command &cmd)
 
 #ifndef GX_DEBUG
 #define printf(fmt, ...)(0)
+#endif
 void GPU_3D::exec_command()
 {
     GX_Command cmd = read_command();
@@ -963,7 +1139,8 @@ void GPU_3D::exec_command()
             case 0x12:
                 printf("\nMTX_POP: $%08X", cmd_params[0]);
             {
-                int8_t offset = ((int8_t)(cmd_params[0] & 0x3F) << 2) >> 2;
+                int8_t offset = ((int8_t)((cmd_params[0] & 0x3F) << 2)) >> 2;
+                printf("\nOffset: %d", offset);
                 if (MTX_MODE != 3)
                     clip_dirty = true;
                 switch (MTX_MODE)
@@ -1367,6 +1544,7 @@ void GPU_3D::exec_command()
         cmd_param_count = 0;
     }
 }
+#ifndef GX_DEBUG
 #undef printf
 #endif
 
@@ -1721,7 +1899,7 @@ void GPU_3D::add_polygon()
         //finalZ = (((vertexZ * 0x4000) / vertexW) + 0x3FFF) * 0x200
         int32_t z;
         if (flush_mode & 0x2) //w-buffer
-            z = normal_w;
+            z = v->coords[3];
         else if (w)
             z = ((((int64_t)v->coords[2] * 0x4000) / v->coords[3]) + 0x3FFF) * 0x200;
         else
@@ -1743,13 +1921,16 @@ void GPU_3D::add_polygon()
         poly->translucent = true;
     else
         poly->translucent = false;
+
+    //Shadow masks have an ID of zero
+    //Actual shadows have a non-zero ID
+    poly->shadow_mask = (!current_poly_attr.id && current_poly_attr.polygon_mode == 3);
+    poly->shadow_poly = !poly->shadow_mask && current_poly_attr.polygon_mode == 3;
     geo_poly_count++;
     if (POLYGON_TYPE >= 2)
         last_poly_strip = poly;
     else
         last_poly_strip = nullptr;
-
-    //Config::test = geo_poly_count == 288;
 }
 
 void GPU_3D::add_vertex()
