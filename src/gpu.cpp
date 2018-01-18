@@ -1002,6 +1002,11 @@ void GPU::set_CLEAR_DEPTH(uint32_t word)
     eng_3D.set_CLEAR_DEPTH(word);
 }
 
+void GPU::set_EDGE_COLOR(uint32_t address, uint16_t halfword)
+{
+    eng_3D.set_EDGE_COLOR(address, halfword);
+}
+
 void GPU::set_FOG_COLOR(uint32_t word)
 {
     eng_3D.set_FOG_COLOR(word);

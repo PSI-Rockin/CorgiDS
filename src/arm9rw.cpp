@@ -762,9 +762,12 @@ void Emulator::arm9_write_word(uint32_t address, uint32_t word)
         case 0x04001070:
             return;
     }
-    //TODO: EDGE_COLOR
     if (address >= 0x04000330 && address < 0x04000340)
+    {
+        gpu.set_EDGE_COLOR(address, word & 0xFFFF);
+        gpu.set_EDGE_COLOR(address + 2, word >> 16);
         return;
+    }
     if (address >= 0x04000360 && address < 0x04000380)
     {
         for (int i = 0; i < 4; i++)
@@ -1222,9 +1225,11 @@ void Emulator::arm9_write_halfword(uint32_t address, uint16_t halfword)
             gpu.set_MASTER_BRIGHT_B(halfword);
             return;
     }
-    //TODO: EDGE_COLOR
     if (address >= 0x04000330 && address < 0x04000340)
+    {
+        gpu.set_EDGE_COLOR(address, halfword);
         return;
+    }
     if (address >= 0x04000380 && address < 0x040003C0)
     {
         gpu.set_TOON_TABLE((address & 0x3F) >> 1, halfword);

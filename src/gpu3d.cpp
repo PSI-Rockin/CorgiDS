@@ -366,6 +366,8 @@ void GPU_3D::render_scanline()
             {
                 if (x == left_x || x == right_x)
                     va = 0x1F;
+                else if (line == current_poly->top_y || line == current_poly->bottom_y)
+                    va = 0x1F;
                 else
                     continue;
             }
@@ -373,6 +375,7 @@ void GPU_3D::render_scanline()
             {
                 //Normal alpha rules
                 va = current_poly->attributes.alpha;
+
             }
 
             vr = interpolate(pix_pos, line_len, left_r, right_r, left_w, right_w) >> 3;
@@ -449,7 +452,7 @@ void GPU_3D::render_scanline()
                         texel_addr /= 4;
                         texel_addr += tex_VRAM_offset;
                         uint8_t data = gpu->read_teximage<uint8_t>(texel_addr);
-                        data = (data >> ((texel_addr & 0x3) * 2)) & 0x3;
+                        data = (data >> ((s & 0x3) * 2)) & 0x3;
 
                         if (data || !texparams.color0_transparent)
                         {
@@ -749,7 +752,15 @@ void GPU_3D::render_scanline()
             else
             {
                 attr_buffer[x].translucent = false;
+                attr_buffer[x].edge = false;
+                if (x == left_x || x == right_x || line == current_poly->top_y || line == current_poly->bottom_y)
+                {
+                    if (attr_buffer[x].opaque_id != current_poly->attributes.id)
+                        attr_buffer[x].edge = true;
+                }
+
                 attr_buffer[x].opaque_id = current_poly->attributes.id;
+
             }
 
             if (alpha > 0x1F)
@@ -764,6 +775,37 @@ void GPU_3D::render_scanline()
             attr_buffer[x].fog = current_poly->attributes.fog_enable;
         }
     }
+    /*if (DISP3DCNT.edge_marking)
+    {
+        for (int i = 0; i < PIXELS_PER_LINE; i++)
+        {
+            if (attr_buffer[i].edge)
+            {
+                bool mark_edge = false;
+                if (i > 0)
+                {
+                    if (attr_buffer[i].opaque_id != attr_buffer[i - 1].opaque_id)
+                    {
+                        if (z_buffer[line][i] < z_buffer[line][i - 1])
+                            mark_edge = true;
+                    }
+                }
+                if (i < PIXELS_PER_LINE - 1)
+                {
+                    if (attr_buffer[i].opaque_id != attr_buffer[i + 1].opaque_id)
+                    {
+                        if (z_buffer[line][i] < z_buffer[line][i + 1])
+                            mark_edge = true;
+                    }
+                }
+                if (mark_edge)
+                {
+                    uint32_t new_color = 0x80000000;
+                    framebuffer[i] = new_color;
+                }
+            }
+        }
+    }*/
     if (DISP3DCNT.fog_enable)
     {
         for (int i = 0; i < PIXELS_PER_LINE; i++)
@@ -2268,6 +2310,13 @@ void GPU_3D::set_CLEAR_DEPTH(uint32_t word)
 {
     printf("\nSet CLEAR_DEPTH: $%08X", word);
     CLEAR_DEPTH = word & 0x7FFF;
+}
+
+void GPU_3D::set_EDGE_COLOR(uint32_t address, uint16_t halfword)
+{
+    int i = (address & 0xF) / 2;
+    printf("\nSet EDGE_COLOR: $%04X ($%02X)", halfword, i);
+    EDGE_COLOR[i] = halfword;
 }
 
 void GPU_3D::set_FOG_COLOR(uint32_t word)

@@ -180,17 +180,17 @@ uint16_t Emulator::arm7_read_halfword(uint32_t address)
             return 0;
         case 0x04004700:
             return 0;
+        /*case 0x04808044:
+            return wifi.get_W_RANDOM();
         case 0x0480815C:
             return wifi.get_W_BB_READ();
         case 0x0480815E:
             return wifi.get_W_BB_BUSY();
         case 0x04808180:
-            return wifi.get_W_RF_BUSY();
+            return wifi.get_W_RF_BUSY();*/
     }
-    //if (address >= 0x04000400 && address < 0x04000500)
-        //return 0;
     if (address >= 0x04800000 && address < 0x04900000)
-        return 0;
+        return wifi.read(address);
     if (address >= 0x06000000 && address < 0x07000000)
         return gpu.read_ARM7<uint16_t>(address);
     if (address >= GBA_ROM_START)
@@ -559,32 +559,17 @@ void Emulator::arm7_write_halfword(uint32_t address, uint16_t halfword)
         case 0x04001080:
             //Some sort of debugging port related to the DS-lite firmware, can be ignored
             return;
-        case 0x04808036:
-            wifi.set_W_POWER_US(halfword);
-            return;
-        case 0x04808158:
-            wifi.set_W_BB_CNT(halfword);
-            return;
-        case 0x0480815A:
-            wifi.set_W_BB_WRITE(halfword);
-            return;
-        case 0x04808160:
-            wifi.set_W_BB_MODE(halfword);
-            return;
-        case 0x04808168:
-            wifi.set_W_BB_POWER(halfword);
-            return;
-        case 0x04808184:
-            wifi.set_W_RF_CNT(halfword);
-            return;
+    }
+    if (address >= 0x04800000 && address < 0x04900000)
+    {
+        wifi.write(address, halfword);
+        return;
     }
     if (address >= 0x04000400 && address < 0x04000500)
     {
         spu.write_channel_halfword(address, halfword);
         return;
     }
-    if (address >= 0x04800000 && address < 0x04900000)
-        return;
     if (address >= 0x06000000 && address < 0x07000000)
     {
         gpu.write_ARM7<uint16_t>(address, halfword);

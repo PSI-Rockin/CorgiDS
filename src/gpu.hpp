@@ -274,6 +274,7 @@ class GPU
 
         void set_CLEAR_COLOR(uint32_t word);
         void set_CLEAR_DEPTH(uint32_t word);
+        void set_EDGE_COLOR(uint32_t address, uint16_t halfword);
         void set_FOG_COLOR(uint32_t word);
         void set_FOG_OFFSET(uint16_t halfword);
         void set_FOG_TABLE(uint32_t address, uint8_t byte);

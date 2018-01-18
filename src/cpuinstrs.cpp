@@ -18,7 +18,7 @@ void Interpreter::arm_interpret(ARM_CPU &cpu)
     uint32_t instruction = cpu.get_current_instr();
     int condition = (instruction & 0xF0000000) >> 28;
     
-    if (!cpu.get_id() && Config::test)
+    if (cpu.get_id() && Config::test)
     {
         printf("\n");
         uint32_t PC = cpu.get_PC() - 8;

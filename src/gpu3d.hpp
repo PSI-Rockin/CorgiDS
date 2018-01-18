@@ -122,6 +122,7 @@ struct RenderAttr
     bool translucent;
     int opaque_id;
     bool fog;
+    bool edge;
 };
 
 class GPU_3D
@@ -165,7 +166,10 @@ class GPU_3D
         //5: translucent
         //6-11: opaque poly id
         //12: fog
+        //13: edge
         RenderAttr attr_buffer[PIXELS_PER_LINE];
+
+        uint16_t EDGE_COLOR[8];
 
         uint32_t FOG_COLOR;
         uint16_t FOG_OFFSET;
@@ -269,6 +273,7 @@ class GPU_3D
 
         void set_CLEAR_COLOR(uint32_t word);
         void set_CLEAR_DEPTH(uint32_t word);
+        void set_EDGE_COLOR(uint32_t address, uint16_t halfword);
         void set_FOG_COLOR(uint32_t word);
         void set_FOG_OFFSET(uint16_t halfword);
         void set_FOG_TABLE(uint32_t address, uint8_t byte);
