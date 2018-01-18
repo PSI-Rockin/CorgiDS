@@ -46,7 +46,9 @@ SOURCES += \
     ../src/bios.cpp \
     ../src/qt/audiodevice.cpp \
     ../src/disasm_thumb.cpp \
-    ../src/debugger.cpp
+    ../src/debugger.cpp \
+    ../src/slot2.cpp \
+    ../src/gba/gbarw.cpp
 
 DEFINES += QT_DEPRECATED_WARNINGS
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000
@@ -80,7 +82,8 @@ HEADERS += \
     ../src/qt/emuthread.hpp \
     ../src/bios.hpp \
     ../src/qt/audiodevice.hpp \
-    ../src/debugger.hpp
+    ../src/debugger.hpp \
+    ../src/slot2.hpp
 
 FORMS += \
     ../src/qt/configwindow.ui \

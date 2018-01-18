@@ -24,6 +24,7 @@ class EmuWindow : public QMainWindow
 {
     Q_OBJECT
     private:
+        Emulator* e;
         EmuThread emuthread;
 
         AudioDevice spu_audio;
@@ -35,6 +36,7 @@ class EmuWindow : public QMainWindow
         QString ROM_file_name;
         QMenu* file_menu;
         QAction* load_ROM_act;
+        QAction* load_GBA_ROM_act;
         QAction* screenshot_act;
 
         QMenu* emulation_menu;
@@ -74,6 +76,7 @@ class EmuWindow : public QMainWindow
     private slots:
         void about();
         void load_ROM();
+        void load_GBA_ROM();
         void preferences();
         void screenshot();
         void handle_audio_state(QAudio::State);

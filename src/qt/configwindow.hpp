@@ -33,6 +33,10 @@ class ConfigWindow : public QWidget
 
         void on_find_savelist_clicked();
 
+        void on_find_gba_BIOS_clicked();
+
+        void on_toggle_gba_boot_clicked(bool checked);
+
 private:
         QSettings cfg;
         Ui::ConfigWindow *ui;

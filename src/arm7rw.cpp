@@ -8,6 +8,9 @@
 
 uint32_t Emulator::arm7_read_word(uint32_t address)
 {
+    //TODO: bad hack.
+    if (gba_mode)
+        return gba_read_word(address);
     if (address >= MAIN_RAM_START && address < SHARED_WRAM_START)
         return *(uint32_t*)&main_RAM[address & MAIN_RAM_MASK];
     if (address >= ARM7_WRAM_START && address < IO_REGS_START)
@@ -77,8 +80,8 @@ uint32_t Emulator::arm7_read_word(uint32_t address)
     }
     if (address >= 0x06000000 && address < 0x07000000)
         return gpu.read_ARM7<uint32_t>(address);
-    if (address >= GBA_ROM_START)
-        return 0xFFFFFFFF;
+    if (address >= GBA_ROM_START && address < GBA_RAM_START)
+        return slot2.read<uint32_t>(address);
     printf("\n(7) Unrecognized word read from $%08X", address);
     //exit(2);
     return 0;
@@ -86,6 +89,9 @@ uint32_t Emulator::arm7_read_word(uint32_t address)
 
 uint16_t Emulator::arm7_read_halfword(uint32_t address)
 {
+    //TODO: bad hack.
+    if (gba_mode)
+        return gba_read_halfword(address);
     if (address < 0x4000)
     {
         if (arm7.get_PC() > 0x4000)
@@ -193,8 +199,8 @@ uint16_t Emulator::arm7_read_halfword(uint32_t address)
         return wifi.read(address);
     if (address >= 0x06000000 && address < 0x07000000)
         return gpu.read_ARM7<uint16_t>(address);
-    if (address >= GBA_ROM_START)
-        return 0xFFFF;
+    if (address >= GBA_ROM_START && address < GBA_RAM_START)
+        return slot2.read<uint16_t>(address);
     printf("\n(7) Unrecognized halfword read from $%08X", address);
     //exit(2);
     return 0;
@@ -202,6 +208,9 @@ uint16_t Emulator::arm7_read_halfword(uint32_t address)
 
 uint8_t Emulator::arm7_read_byte(uint32_t address)
 {
+    //TODO: bad hack.
+    if (gba_mode)
+        return gba_read_byte(address);
     if (address >= MAIN_RAM_START && address < SHARED_WRAM_START)
         return main_RAM[address & MAIN_RAM_MASK];
     if (address >= ARM7_WRAM_START && address < IO_REGS_START)
@@ -253,6 +262,8 @@ uint8_t Emulator::arm7_read_byte(uint32_t address)
     }
     if (address >= 0x04000400 && address < 0x04000500)
         return spu.read_channel_byte(address);
+    if (address >= GBA_ROM_START && address < GBA_RAM_START)
+        return slot2.read<uint8_t>(address);
     printf("\n(7) Unrecognized byte read from $%08X", address);
     //exit(2);
     return 0;
@@ -260,10 +271,11 @@ uint8_t Emulator::arm7_read_byte(uint32_t address)
 
 void Emulator::arm7_write_word(uint32_t address, uint32_t word)
 {
-    if (address == 0x027E0014)
+    //TODO: bad hack.
+    if (gba_mode)
     {
-        printf("\n(7) Write of $%08X to $%08X", word, address);
-        //exit(0);
+        gba_write_word(address, word);
+        return;
     }
     if (address >= MAIN_RAM_START && address < SHARED_WRAM_START)
     {
@@ -413,6 +425,12 @@ void Emulator::arm7_write_word(uint32_t address, uint32_t word)
 
 void Emulator::arm7_write_halfword(uint32_t address, uint16_t halfword)
 {
+    //TODO: bad hack.
+    if (gba_mode)
+    {
+        gba_write_halfword(address, halfword);
+        return;
+    }
     if (address >= MAIN_RAM_START && address < SHARED_WRAM_START)
     {
         *(uint16_t*)&main_RAM[address & MAIN_RAM_MASK] = halfword;
@@ -581,6 +599,12 @@ void Emulator::arm7_write_halfword(uint32_t address, uint16_t halfword)
 
 void Emulator::arm7_write_byte(uint32_t address, uint8_t byte)
 {
+    //TODO: bad hack.
+    if (gba_mode)
+    {
+        gba_write_byte(address, byte);
+        return;
+    }
     if (address >= MAIN_RAM_START && address < SHARED_WRAM_START)
     {
         main_RAM[address & MAIN_RAM_MASK] = byte;
@@ -639,6 +663,9 @@ void Emulator::arm7_write_byte(uint32_t address, uint8_t byte)
         case 0x04000301:
             switch (byte)
             {
+                case 0x40:
+                    start_gba_mode(true);
+                    break;
                 case 0x80:
                     arm7.halt();
                     /*printf("\nHalted ARM7");

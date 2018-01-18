@@ -14,7 +14,9 @@ namespace Config
     extern std::string arm9_bios_path;
     extern std::string firmware_path;
     extern std::string savelist_path;
+    extern std::string gba_bios_path;
     extern bool direct_boot_enabled;
+    extern bool gba_direct_boot;
     extern bool pause_when_unfocused;
 
     extern bool bg_enable[4];

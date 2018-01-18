@@ -15,6 +15,7 @@
 #include "interrupts.hpp"
 #include "ipc.hpp"
 #include "rtc.hpp"
+#include "slot2.hpp"
 #include "spi.hpp"
 #include "spu.hpp"
 #include "timers.hpp"
@@ -75,16 +76,20 @@ class Emulator
         NDS_DMA dma;
         GPU gpu;
         RealTimeClock rtc;
+        Slot2Device slot2;
         SPI_Bus spi;
         SPU spu;
         NDS_Timing timers;
         WiFi wifi;
+
+        bool gba_mode;
     
         uint8_t main_RAM[1024 * 1024 * 4]; //4 MB
         uint8_t shared_WRAM[1024 * 32]; //32 KB
         uint8_t arm7_WRAM[1024 * 64]; //64 KB
         uint8_t arm9_bios[BIOS9_SIZE];
         uint8_t arm7_bios[BIOS7_SIZE];
+        uint8_t gba_bios[BIOS_GBA_SIZE];
 
         //Scheduling
         uint64_t system_timestamp;
@@ -136,9 +141,11 @@ class Emulator
         Emulator();
         int init();
         int load_firmware();
+        void load_bios_gba(uint8_t* bios);
         void load_bios7(uint8_t* bios);
         void load_bios9(uint8_t* bios);
         void load_firmware(uint8_t* firmware);
+        void load_slot2(uint8_t* data, uint64_t size);
         void load_save_database(std::string name);
         int load_ROM(std::string ROM_name);
 
@@ -149,7 +156,11 @@ class Emulator
         void direct_boot();
         void debug();
         void run();
+        void run_gba();
         bool requesting_interrupt(int cpu_id);
+
+        bool is_gba();
+        void start_gba_mode(bool throw_exception);
 
         uint64_t get_timestamp();
 
@@ -188,6 +199,13 @@ class Emulator
         void arm7_write_word(uint32_t address, uint32_t word);
         void arm7_write_halfword(uint32_t address, uint16_t halfword);
         void arm7_write_byte(uint32_t address, uint8_t byte);
+
+        uint32_t gba_read_word(uint32_t address);
+        uint16_t gba_read_halfword(uint32_t address);
+        uint8_t gba_read_byte(uint32_t address);
+        void gba_write_word(uint32_t address, uint32_t word);
+        void gba_write_halfword(uint32_t address, uint16_t halfword);
+        void gba_write_byte(uint32_t address, uint8_t byte);
     
         void cart_copy_keybuffer(uint8_t* buffer);
         void cart_write_header(uint32_t address, uint16_t halfword);

@@ -19,6 +19,7 @@ ConfigWindow::ConfigWindow(QWidget *parent) :
     ui->arm9_BIOS_name->setReadOnly(true);
     ui->firmware_name->setReadOnly(true);
     ui->savelist_name->setReadOnly(true);
+    ui->gba_BIOS_name->setReadOnly(true);
 
     setWindowTitle("Emulator Configuration");
 
@@ -26,9 +27,13 @@ ConfigWindow::ConfigWindow(QWidget *parent) :
     Config::arm9_bios_path = cfg.value("boot/bios9path").toString().toStdString();
     Config::firmware_path = cfg.value("boot/firmwarepath").toString().toStdString();
     Config::savelist_path = cfg.value("saves/savelistpath").toString().toStdString();
+    Config::gba_bios_path = cfg.value("boot/gbapath").toString().toStdString();
 
     Config::direct_boot_enabled = cfg.value("boot/directboot").toBool();
     ui->toggle_direct_boot->setChecked(Config::direct_boot_enabled);
+
+    Config::gba_direct_boot = cfg.value("boot/gbadirectboot").toBool();
+    ui->toggle_gba_boot->setChecked(Config::gba_direct_boot);
 
     Config::pause_when_unfocused = false;
 
@@ -84,7 +89,11 @@ void ConfigWindow::update_ui()
     QString save_path(Config::savelist_path.c_str());
     ui->savelist_name->setText(QFileInfo(save_path).fileName());
 
+    QString gba_path(Config::gba_bios_path.c_str());
+    ui->gba_BIOS_name->setText(QFileInfo(gba_path).fileName());
+
     ui->toggle_direct_boot->setChecked(Config::direct_boot_enabled);
+    ui->toggle_gba_boot->setChecked(Config::gba_direct_boot);
 }
 
 void ConfigWindow::on_find_savelist_clicked()
@@ -93,4 +102,18 @@ void ConfigWindow::on_find_savelist_clicked()
     Config::savelist_path = path.toStdString();
     cfg.setValue("saves/savelistpath", path);
     update_ui();
+}
+
+void ConfigWindow::on_find_gba_BIOS_clicked()
+{
+    QString path = QFileDialog::getOpenFileName(this, tr("Load GBA BIOS"), "", "GBA BIOS (*.bin *.rom)");
+    Config::gba_bios_path = path.toStdString();
+    cfg.setValue("boot/gbapath", path);
+    update_ui();
+}
+
+void ConfigWindow::on_toggle_gba_boot_clicked(bool checked)
+{
+    Config::gba_direct_boot = checked;
+    cfg.setValue("boot/gbadirectboot", checked);
 }

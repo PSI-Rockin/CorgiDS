@@ -4,6 +4,8 @@
     See LICENSE.txt for details
 */
 
+#include <fstream>
+
 #include <QCoreApplication>
 #include <QCursor>
 #include <QFileDialog>
@@ -14,6 +16,8 @@
 #include "../config.hpp"
 #include "emuwindow.hpp"
 
+using namespace std;
+
 EmuWindow::EmuWindow(QWidget *parent) : QMainWindow(parent)
 {
 
@@ -21,6 +25,7 @@ EmuWindow::EmuWindow(QWidget *parent) : QMainWindow(parent)
 
 int EmuWindow::initialize()
 {
+    e = emuthread.get_emulator();
     if (emuthread.init())
         return 1;
 
@@ -32,12 +37,16 @@ int EmuWindow::initialize()
     load_ROM_act->setShortcuts(QKeySequence::Open);
     connect(load_ROM_act, &QAction::triggered, this, &EmuWindow::load_ROM);
 
+    //load_GBA_ROM_act = new QAction(tr("&Load GBA ROM..."), this);
+    //connect(load_GBA_ROM_act, &QAction::triggered, this, &EmuWindow::load_GBA_ROM);
+
     screenshot_act = new QAction(tr("&Save Screenshot As..."), this);
     screenshot_act->setShortcut(Qt::Key_F2);
     connect(screenshot_act, &QAction::triggered, this, &EmuWindow::screenshot);
 
     file_menu = menuBar()->addMenu(tr("&File"));
     file_menu->addAction(load_ROM_act);
+    //file_menu->addAction(load_GBA_ROM_act);
     file_menu->addAction(screenshot_act);
 
     config_act = new QAction(tr("&Config"), this);
@@ -63,7 +72,7 @@ int EmuWindow::initialize()
     setWindowTitle("CorgiDS");
     show();
 
-    spu_audio.set_SPU(emuthread.get_emulator()->get_SPU());
+    spu_audio.set_SPU(e->get_SPU());
     spu_audio.open(QIODevice::ReadOnly);
 
     //Initialize audio
@@ -296,7 +305,7 @@ void EmuWindow::load_ROM()
 {
     audio->stop();
     emuthread.pause(PAUSE_EVENT::LOADING_ROM);
-    if (emuthread.load_firmware())
+    if (e->load_firmware())
     {
         QMessageBox::critical(this, "Error", "Please load the BIOS and firmware images before "
                               "loading a game ROM.");
@@ -321,6 +330,44 @@ void EmuWindow::load_ROM()
         emuthread.unpause(PAUSE_EVENT::LOADING_ROM);
     }
     audio->start(&spu_audio);
+}
+
+void EmuWindow::load_GBA_ROM()
+{
+    audio->stop();
+    emuthread.pause(PAUSE_EVENT::LOADING_ROM);
+    //Load BIOS
+    ifstream bios_file(Config::gba_bios_path, ios::binary);
+    if (!bios_file.is_open())
+    {
+        QMessageBox::critical(this, "Error", "Please load the GBA BIOS image before "
+                              "loading a GBA ROM.");
+        emuthread.unpause(PAUSE_EVENT::LOADING_ROM);
+        return;
+    }
+    uint8_t* BIOS = new uint8_t[BIOS_GBA_SIZE];
+    bios_file.read((char*)BIOS, BIOS_GBA_SIZE);
+    bios_file.close();
+    e->load_bios_gba(BIOS);
+    delete[] BIOS;
+    QString name = QFileDialog::getOpenFileName(this, tr("Load GBA ROM"), "", "GBA ROMs (*.gba)");
+    if (name.length())
+    {
+        ifstream file(name.toStdString(), ios::binary | ios::ate);
+        if (file.is_open())
+        {
+            uint64_t ROM_size = file.tellg();
+            file.seekg(0, ios::beg);
+            uint8_t* data = new uint8_t[ROM_size];
+            file.read((char*)data, ROM_size);
+            file.close();
+            emuthread.load_slot2(data, ROM_size);
+            delete[] data;
+            printf("Slot 2 successfully loaded.");
+        }
+    }
+    audio->start(&spu_audio);
+    emuthread.unpause(PAUSE_EVENT::LOADING_ROM);
 }
 
 void EmuWindow::about()

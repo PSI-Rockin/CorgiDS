@@ -75,6 +75,7 @@ void Emulator::power_on()
 {
     for (int i = 0; i < 4; i++)
         Config::bg_enable[i] = true;
+    gba_mode = false;
     cycle_count = 0;
     arm9.power_on();
     arm7.power_on();
@@ -161,12 +162,22 @@ int Emulator::load_ROM(string ROM_file_name)
 
 void Emulator::load_bios7(uint8_t *bios)
 {
-    memcpy(arm7_bios, bios, 16384 * sizeof(uint8_t));
+    memcpy(arm7_bios, bios, BIOS7_SIZE);
 }
 
 void Emulator::load_bios9(uint8_t *bios)
 {
-    memcpy(arm9_bios, bios, 4096 * sizeof(uint8_t));
+    memcpy(arm9_bios, bios, BIOS9_SIZE);
+}
+
+void Emulator::load_bios_gba(uint8_t *bios)
+{
+    memcpy(gba_bios, bios, BIOS_GBA_SIZE);
+}
+
+void Emulator::load_slot2(uint8_t *data, uint64_t size)
+{
+    slot2.load_data(data, size);
 }
 
 void Emulator::load_firmware(uint8_t *firmware)
@@ -184,7 +195,7 @@ int Emulator::load_firmware()
         return 1;
     }
     
-    arm9_bios_file.read((char*)arm9_bios, 4096 * sizeof(uint8_t));
+    arm9_bios_file.read((char*)arm9_bios, BIOS9_SIZE);
     printf("ARM9 BIOS loaded successfully.\n");
     
     arm9_bios_file.close();
@@ -197,10 +208,22 @@ int Emulator::load_firmware()
         return 1;
     }
     
-    arm7_bios_file.read((char*)arm7_bios, 16384 * sizeof(uint8_t));
+    arm7_bios_file.read((char*)arm7_bios, BIOS7_SIZE);
     printf("ARM7 BIOS loaded successfully.\n");
     
     arm7_bios_file.close();
+
+    ifstream gba_bios_file(Config::gba_bios_path, ios::in | ios::binary);
+    if (!gba_bios_file.is_open())
+    {
+        printf("Warning: failed to load GBA BIOS\n");
+    }
+    else
+    {
+        gba_bios_file.read((char*)gba_bios, BIOS_GBA_SIZE);
+        gba_bios_file.close();
+        printf("GBA BIOS loaded successfully.\n");
+    }
 
     return spi.init(Config::firmware_path);
 }
@@ -310,6 +333,36 @@ void Emulator::run()
         cart.run(8);
     }
     cart.save_check();
+}
+
+void Emulator::run_gba()
+{
+    gpu.start_frame();
+    while (!gpu.is_frame_complete())
+    {
+        arm7.execute();
+    }
+}
+
+bool Emulator::is_gba()
+{
+    return gba_mode;
+}
+
+//Only use throw_exception when emulation has started
+void Emulator::start_gba_mode(bool throw_exception)
+{
+    gba_mode = true;
+    arm7.jp(0, true);
+    debug();
+    //Allocate VRAM C and D as 256 KB work RAM
+    gpu.set_VRAMCNT_C(0x82);
+    gpu.set_VRAMCNT_D(0x86);
+    if (throw_exception)
+    {
+        //Signal to the emulation thread that emulation has switched from NDS to GBA
+        throw "!";
+    }
 }
 
 uint64_t Emulator::get_timestamp()

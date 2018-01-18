@@ -154,8 +154,8 @@ uint32_t Emulator::arm9_read_word(uint32_t address)
         return gpu.read_lcdc<uint32_t>(address);
     if (address >= OAM_START && address < GBA_ROM_START)
         return gpu.read_OAM<uint32_t>(address);
-    if (address >= GBA_ROM_START)
-        return 0xFFFFFFFF;
+    if (address >= GBA_ROM_START && address < GBA_RAM_START)
+        return slot2.read<uint32_t>(address);
     //Ignore reads from NULL
     printf("\n(9) Unrecognized word read from $%08X", address);
     //exit(1);
@@ -321,8 +321,8 @@ uint16_t Emulator::arm9_read_halfword(uint32_t address)
         return gpu.read_objb<uint16_t>(address);
     if (address >= VRAM_LCDC_A && address < VRAM_LCDC_END)
         return gpu.read_lcdc<uint16_t>(address);
-    if (address >= GBA_ROM_START)
-        return 0xFFFF;
+    if (address >= GBA_ROM_START && address < GBA_RAM_START)
+        return slot2.read<uint16_t>(address);
     printf("\n(9) Unrecognized halfword read from $%08X", address);
     return 0;
     //exit(1);
@@ -398,8 +398,8 @@ uint8_t Emulator::arm9_read_byte(uint32_t address)
         return gpu.read_lcdc<uint8_t>(address);
     if (address >= OAM_START && address < GBA_ROM_START)
         return gpu.read_OAM<uint8_t>(address);
-    if (address >= GBA_ROM_START)
-        return 0xFF;
+    if (address >= GBA_ROM_START && address < GBA_RAM_START)
+        return slot2.read<uint8_t>(address);
     printf("\n(9) Unrecognized byte read from $%08X", address);
     //exit(1);
     return 0;

@@ -49,6 +49,7 @@
 #define VRAM_I_SIZE             1024 * 16
 #define BIOS9_SIZE              1024 * 4
 #define BIOS7_SIZE              1024 * 16
+#define BIOS_GBA_SIZE           1024 * 16
 
 //Masks
 #define ITCM_MASK               0x7FFF

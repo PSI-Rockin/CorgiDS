@@ -44,6 +44,19 @@ int EmuThread::load_game(QString ROM_name)
     return error;
 }
 
+void EmuThread::load_slot2(uint8_t* data, uint64_t size)
+{
+    load_mutex.lock();
+    e.load_slot2(data, size);
+    if (Config::gba_direct_boot)
+    {
+        e.power_on();
+        e.start_gba_mode(false);
+        unpause(GAME_NOT_STARTED);
+    }
+    load_mutex.unlock();
+}
+
 Emulator* EmuThread::get_emulator()
 {
     return &e;
@@ -75,12 +88,18 @@ void EmuThread::run()
             auto last_update = chrono::system_clock::now();
             try
             {
-                e.run();
+                if (e.is_gba())
+                    e.run_gba();
+                else
+                    e.run();
             }
             catch (const char* error)
             {
-                pause(GAME_NOT_STARTED);
-                emit emulation_error(error);
+                if (error[0] != '!')
+                {
+                    pause(GAME_NOT_STARTED);
+                    emit emulation_error(error);
+                }
             }
             frames++;
             e.get_upper_frame(upper_buffer);

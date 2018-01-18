@@ -49,6 +49,7 @@ class EmuThread : public QThread
         int init();
         int load_firmware();
         void load_save_database();
+        void load_slot2(uint8_t* data, uint64_t size);
         int load_game(QString ROM_file);
 
         Emulator* get_emulator();
