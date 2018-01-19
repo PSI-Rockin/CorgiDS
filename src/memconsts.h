@@ -68,6 +68,8 @@
 
 //Other constants
 #define PIXELS_PER_LINE         256
+#define GBA_PIXELS_PER_LINE     240
 #define SCANLINES               192
+#define GBA_SCANLINES           160
 
 #endif

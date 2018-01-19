@@ -56,7 +56,7 @@ void POWCNT2_REG::set(uint8_t byte)
 }
 
 Emulator::Emulator() : arm7(this, 1), arm9(this, 0), arm9_cp15(this), cart(this), debugger(this), dma(this),
-                       gpu(this), spi(this), spu(this), timers(this) {}
+                       gba_dma(this), gpu(this), spi(this), spu(this), timers(this) {}
 
 int Emulator::init()
 {
@@ -341,6 +341,9 @@ void Emulator::run_gba()
     while (!gpu.is_frame_complete())
     {
         arm7.execute();
+        uint64_t cycle_count = arm7.cycles_ran();
+
+        gpu.gba_run(cycle_count);
     }
 }
 
@@ -353,11 +356,12 @@ bool Emulator::is_gba()
 void Emulator::start_gba_mode(bool throw_exception)
 {
     gba_mode = true;
-    arm7.jp(0, true);
-    debug();
+    arm7.gba_boot(true);
+    gba_dma.power_on();
+    //debug();
     //Allocate VRAM C and D as 256 KB work RAM
     gpu.set_VRAMCNT_C(0x82);
-    gpu.set_VRAMCNT_D(0x86);
+    gpu.set_VRAMCNT_D(0x8A);
     if (throw_exception)
     {
         //Signal to the emulation thread that emulation has switched from NDS to GBA
@@ -449,6 +453,11 @@ void Emulator::request_interrupt9(INTERRUPT id)
 {
     //printf("\nRequesting interrupt9 %d", static_cast<int>(id));
     int9_reg.IF |= 1 << static_cast<int>(id);
+}
+
+void Emulator::request_interrupt_gba(int id)
+{
+    int7_reg.IF |= 1 << id;
 }
 
 void Emulator::get_upper_frame(uint32_t* buffer)

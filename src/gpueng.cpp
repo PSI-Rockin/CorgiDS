@@ -899,7 +899,7 @@ void GPU_2D_Engine::draw_sprites(bool objwin)
                 bool one_palette_mode = attributes[0] & (1 << 13);
 
                 int tile_y = y / 8;
-                int tile_scanline = y % 8;
+                int tile_scanline = y & 0x7;
 
                 if (one_palette_mode)
                     tile_scanline *= 8;

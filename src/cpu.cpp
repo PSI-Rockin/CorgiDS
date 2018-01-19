@@ -231,6 +231,18 @@ void ARM_CPU::direct_boot(uint32_t entry_point)
     }
 }
 
+void ARM_CPU::gba_boot(bool direct)
+{
+    if (direct)
+        jp(GBA_ROM_START, true);
+    else
+        jp(0, true);
+    regs[13] = 0x03007F00;
+    SP_svc = 0x03007FE0;
+    SP_irq = 0x03007FA0;
+    CPSR.mode = PSR_MODE::SYSTEM;
+}
+
 void ARM_CPU::set_cp15(CP15 *cp)
 {
     cp15 = cp;
@@ -243,8 +255,7 @@ void ARM_CPU::execute()
     //TODO: replace these comparisons with a generic "halt state" variable
     if (halted)
     {
-        //Wait until next event
-        timestamp = e->get_timestamp() << (1 - cpu_id);
+        timestamp += 4;
         if (e->requesting_interrupt(cpu_id))
         {
             halted = false;

@@ -6,6 +6,7 @@
 
 #ifndef emulator_hpp
 #define emulator_hpp
+#include "gba/gbadma.hpp"
 #include "bios.hpp"
 #include "cartridge.hpp"
 #include "cpu.hpp"
@@ -83,6 +84,7 @@ class Emulator
         WiFi wifi;
 
         bool gba_mode;
+        GBA_DMA gba_dma;
     
         uint8_t main_RAM[1024 * 1024 * 4]; //4 MB
         uint8_t shared_WRAM[1024 * 32]; //32 KB
@@ -212,6 +214,7 @@ class Emulator
     
         void request_interrupt7(INTERRUPT id);
         void request_interrupt9(INTERRUPT id);
+        void request_interrupt_gba(int id);
     
         bool arm7_has_cart_rights();
     

@@ -89,6 +89,7 @@ class ARM_CPU
         void set_cp15(CP15* cp);
         void power_on();
         void direct_boot(uint32_t entry_point);
+        void gba_boot(bool direct);
         void run();
         void execute();
         void jp(uint32_t new_addr, bool change_thumb_state);

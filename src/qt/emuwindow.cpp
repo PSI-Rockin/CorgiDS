@@ -37,8 +37,8 @@ int EmuWindow::initialize()
     load_ROM_act->setShortcuts(QKeySequence::Open);
     connect(load_ROM_act, &QAction::triggered, this, &EmuWindow::load_ROM);
 
-    //load_GBA_ROM_act = new QAction(tr("&Load GBA ROM..."), this);
-    //connect(load_GBA_ROM_act, &QAction::triggered, this, &EmuWindow::load_GBA_ROM);
+    load_GBA_ROM_act = new QAction(tr("&Load GBA ROM..."), this);
+    connect(load_GBA_ROM_act, &QAction::triggered, this, &EmuWindow::load_GBA_ROM);
 
     screenshot_act = new QAction(tr("&Save Screenshot As..."), this);
     screenshot_act->setShortcut(Qt::Key_F2);
@@ -46,7 +46,7 @@ int EmuWindow::initialize()
 
     file_menu = menuBar()->addMenu(tr("&File"));
     file_menu->addAction(load_ROM_act);
-    //file_menu->addAction(load_GBA_ROM_act);
+    file_menu->addAction(load_GBA_ROM_act);
     file_menu->addAction(screenshot_act);
 
     config_act = new QAction(tr("&Config"), this);
@@ -364,6 +364,9 @@ void EmuWindow::load_GBA_ROM()
             emuthread.load_slot2(data, ROM_size);
             delete[] data;
             printf("Slot 2 successfully loaded.");
+            Config::enable_framelimiter = true;
+            Config::hle_bios = false;
+            Config::frameskip = 0;
         }
     }
     audio->start(&spu_audio);

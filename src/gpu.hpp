@@ -12,6 +12,10 @@
 #include "gpueng.hpp"
 #include "memconsts.h"
 
+//Defines for GBA mode
+#define GBA_BG VRAM_E
+#define GBA_OBJ VRAM_F
+
 struct DISPSTAT_REG
 {
     bool is_VBLANK;
@@ -128,7 +132,9 @@ class GPU
         void write_OAM(uint32_t address, uint16_t halfword);
 
         template <typename T> T read_ARM7(uint32_t address);
+        template <typename T> T read_gba(uint32_t address);
         template <typename T> void write_ARM7(uint32_t address, T value);
+        template <typename T> void write_gba(uint32_t address, T value);
 
         uint16_t* get_palette(bool engine_A);
         uint16_t* get_VRAM_block(int id);
@@ -295,6 +301,9 @@ class GPU
         void SWAP_BUFFERS(uint32_t word);
         void VIEWPORT(uint32_t word);
         void set_GXSTAT(uint32_t word);
+
+        void gba_run(uint64_t cycles);
+        void gba_set_DISPCNT(uint16_t halfword);
 };
 
 template <typename T>
@@ -541,6 +550,17 @@ T GPU::read_ARM7(uint32_t address)
 }
 
 template <typename T>
+T GPU::read_gba(uint32_t address)
+{
+    //I don't know if the NDS uses separate VRAM for GBA mode or if it re-uses VRAM banks
+    //Might as well re-use the banks, since it makes no difference either way
+    if (address < 0x06010000)
+        return *(T*)&GBA_BG[address & 0xFFFF];
+    else
+        return *(T*)&GBA_OBJ[address & 0x7FFF];
+}
+
+template <typename T>
 void GPU::write_ARM7(uint32_t address, T value)
 {
     if (VRAMCNT_C.enabled)
@@ -555,6 +575,17 @@ void GPU::write_ARM7(uint32_t address, T value)
         if (ADDR_IN_RANGE(0x06000000 + offset, VRAM_D_SIZE) && VRAMCNT_D.MST == 2)
             *(T*)&VRAM_D[address & VRAM_D_MASK] = value;
     }
+}
+
+template <typename T>
+void GPU::write_gba(uint32_t address, T value)
+{
+    //I don't know if the NDS uses separate VRAM for GBA mode or if it re-uses VRAM banks
+    //Might as well re-use the banks, since it makes no difference either way
+    if (address < 0x06010000)
+        *(T*)&GBA_BG[address & 0xFFFF] = value;
+    else
+        *(T*)&GBA_OBJ[address & 0x7FFF] = value;
 }
 
 template <typename T>

@@ -133,6 +133,10 @@ class GPU_2D_Engine
         void draw_pixel(int x, int y, uint16_t color, int source);
         void get_window_mask();
         void handle_BLDCNT_effects();
+
+        void gba_draw_txt(int index);
+        void gba_draw_sprites();
+        void gba_draw_pixel(int x, int y, uint16_t color, int source);
     public:
         GPU_2D_Engine(GPU* gpu, bool engine_A);
         void draw_backdrop();
@@ -199,6 +203,9 @@ class GPU_2D_Engine
 
         void set_MASTER_BRIGHT(uint16_t halfword);
         void set_DISPCAPCNT(uint32_t word);
+
+        void gba_draw_scanline();
+        void gba_set_DISPCNT(uint16_t halfword);
 };
 
 #endif // GPUENG_HPP

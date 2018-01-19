@@ -285,11 +285,11 @@ string Disassembler::disasm_thumb_load_store_imm(ARM_CPU &cpu, uint16_t instruct
 {
     stringstream output;
     bool is_loading = instruction & (1 << 11);
-    bool is_byte = (instruction & (1 << 10));
+    bool is_byte = (instruction & (1 << 12));
 
     uint32_t base = (instruction >> 3) & 0x7;
     uint32_t source_dest = instruction & 0x7;
-    uint32_t offset = (instruction >> 6) & 0x7;
+    uint32_t offset = (instruction >> 6) & 0x1F;
 
     if (is_loading)
         output << "ldr";
@@ -298,6 +298,8 @@ string Disassembler::disasm_thumb_load_store_imm(ARM_CPU &cpu, uint16_t instruct
 
     if (is_byte)
         output << "b";
+    else
+        offset <<= 2;
 
     output << " " << ARM_CPU::get_reg_name(source_dest) << ", [" << ARM_CPU::get_reg_name(base);
     if (offset)
