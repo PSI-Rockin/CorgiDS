@@ -31,7 +31,10 @@ uint32_t byteswap_word(uint32_t word)
     return result;
 }
 
-NDS_Cart::NDS_Cart(Emulator* e) : e(e) {}
+NDS_Cart::NDS_Cart(Emulator* e) : e(e)
+{
+    power_on();
+}
 
 void NDS_Cart::key1_encrypt(uint32_t *data)
 {

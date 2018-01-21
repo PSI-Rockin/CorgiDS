@@ -361,13 +361,23 @@ void EmuWindow::load_GBA_ROM()
             uint8_t* data = new uint8_t[ROM_size];
             file.read((char*)data, ROM_size);
             file.close();
-            emuthread.load_slot2(data, ROM_size);
-            delete[] data;
-            printf("Slot 2 successfully loaded.");
+            spu_audio.clear_buffer();
             Config::enable_framelimiter = true;
             Config::hle_bios = false;
             Config::frameskip = 0;
+            emuthread.load_slot2(data, ROM_size);
+            delete[] data;
+            printf("Slot 2 successfully loaded.\n");
+
+            if (Config::gba_direct_boot)
+            {
+                e->power_on();
+                e->start_gba_mode(false);
+                emuthread.unpause(GAME_NOT_STARTED);
+            }
         }
+        else
+            QMessageBox::critical(this, "Error", "Unable to load GBA ROM");
     }
     audio->start(&spu_audio);
     emuthread.unpause(PAUSE_EVENT::LOADING_ROM);
@@ -375,7 +385,7 @@ void EmuWindow::load_GBA_ROM()
 
 void EmuWindow::about()
 {
-    QMessageBox::about(this, "CorgiDS v0.1", "Created by PSISP.");
+    QMessageBox::about(this, "CorgiDS v0.2", "Created by PSISP.");
 }
 
 void EmuWindow::preferences()

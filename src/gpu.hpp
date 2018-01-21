@@ -582,10 +582,6 @@ void GPU::write_ARM7(uint32_t address, T value)
 template <typename T>
 void GPU::write_gba(uint32_t address, T value)
 {
-    //I don't know if the NDS uses separate VRAM for GBA mode or if it re-uses VRAM banks
-    //Might as well re-use the banks, since it makes no difference either way
-    if (address == 0x0600FB4A)
-        printf("\n[GPU] Write to $%08X: $%08X", address, value);
     if (address < 0x06010000)
         *(T*)&GBA_BG[address & 0xFFFF] = value;
     else

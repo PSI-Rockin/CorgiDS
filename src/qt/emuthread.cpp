@@ -48,12 +48,6 @@ void EmuThread::load_slot2(uint8_t* data, uint64_t size)
 {
     load_mutex.lock();
     e.load_slot2(data, size);
-    if (Config::gba_direct_boot)
-    {
-        e.power_on();
-        e.start_gba_mode(false);
-        unpause(GAME_NOT_STARTED);
-    }
     load_mutex.unlock();
 }
 
