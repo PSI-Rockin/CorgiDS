@@ -143,7 +143,7 @@ void Emulator::power_on()
     int9_reg.IE = 0;
     int9_reg.IF = 0;
 
-    if (Config::direct_boot_enabled)
+    if (Config::direct_boot_enabled && cart.game_loaded())
         direct_boot();
 }
 
@@ -355,9 +355,10 @@ bool Emulator::is_gba()
 //Only use throw_exception when emulation has started
 void Emulator::start_gba_mode(bool throw_exception)
 {
+    power_on();
+    WAITCNT = 0;
     gba_mode = true;
     arm7.gba_boot(true);
-    gba_dma.power_on();
     //debug();
     //Allocate VRAM C and D as 256 KB work RAM
     gpu.set_VRAMCNT_C(0x82);
@@ -376,7 +377,10 @@ uint64_t Emulator::get_timestamp()
 
 void Emulator::HBLANK_DMA_request()
 {
-    dma.HBLANK_request();
+    if (!gba_mode)
+        dma.HBLANK_request();
+    else
+        gba_dma.HBLANK_request();
 }
 
 void Emulator::gamecart_DMA_request()

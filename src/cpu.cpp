@@ -720,6 +720,22 @@ void ARM_CPU::add_s16_data(uint32_t address, int cycles)
     timestamp += (1 + data_waitstates[(address & 0x0F000000) >> 24][3]) * cycles;
 }
 
+void ARM_CPU::update_code_waitstate(uint8_t region, int n32_cycles, int s32_cycles, int n16_cycles, int s16_cycles)
+{
+    code_waitstates[region][0] = n32_cycles;
+    code_waitstates[region][1] = s32_cycles;
+    code_waitstates[region][2] = n16_cycles;
+    code_waitstates[region][3] = s16_cycles;
+}
+
+void ARM_CPU::update_data_waitstate(uint8_t region, int n32_cycles, int s32_cycles, int n16_cycles, int s16_cycles)
+{
+    data_waitstates[region][0] = n32_cycles;
+    data_waitstates[region][1] = s32_cycles;
+    data_waitstates[region][2] = n16_cycles;
+    data_waitstates[region][3] = s16_cycles;
+}
+
 void ARM_CPU::andd(int destination, int source, int operand, bool set_condition_codes)
 {
     uint32_t result = source & operand;

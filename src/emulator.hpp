@@ -125,6 +125,8 @@ class Emulator
         uint64_t SQRT_PARAM;
         uint8_t POSTFLG7, POSTFLG9; //0x04000300
         uint32_t BIOSPROT; //0x04000308
+
+        uint16_t WAITCNT;
     
         bool hstep_even; //Debugging purposes
     

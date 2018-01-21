@@ -1447,6 +1447,18 @@ void GPU_2D_Engine::set_framebuffer(uint32_t *buffer)
     //framebuffer = buffer;
 }
 
+void GPU_2D_Engine::clear_buffer()
+{
+    for (int y = 0; y < SCANLINES; y++)
+    {
+        for (int x = 0; x < PIXELS_PER_LINE; x++)
+        {
+            framebuffer[x + (y * PIXELS_PER_LINE)] = 0xFF000000;
+            front_framebuffer[x + (y * PIXELS_PER_LINE)] = 0xFF000000;
+        }
+    }
+}
+
 uint32_t GPU_2D_Engine::get_DISPCNT()
 {
     uint32_t reg = 0;
@@ -1488,6 +1500,11 @@ uint16_t GPU_2D_Engine::get_BGHOFS(int index)
 uint16_t GPU_2D_Engine::get_BGVOFS(int index)
 {
     return BGVOFS[index];
+}
+
+uint32_t GPU_2D_Engine::get_BG2X()
+{
+    return BG2X;
 }
 
 uint16_t GPU_2D_Engine::get_WIN0V()
@@ -1726,6 +1743,7 @@ void GPU_2D_Engine::set_MOSAIC(uint16_t halfword)
 
 void GPU_2D_Engine::set_BLDCNT(uint16_t halfword)
 {
+    printf("\nSet BLDCNT: $%04X", halfword);
     for (int bit = 0; bit < 4; bit++)
     {
         BLDCNT.bg_first_target_pix[bit] = halfword & (1 << bit);
@@ -1742,6 +1760,7 @@ void GPU_2D_Engine::set_BLDCNT(uint16_t halfword)
 
 void GPU_2D_Engine::set_BLDALPHA(uint16_t halfword)
 {
+    printf("\nSet BLDALPHA: $%04X", halfword);
     BLDALPHA = halfword;
 }
 

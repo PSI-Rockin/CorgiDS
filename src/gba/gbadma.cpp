@@ -129,7 +129,7 @@ void GBA_DMA::write_CNT(int index, uint16_t CNT)
         dmas[index].internal_source = dmas[index].source;
         dmas[index].internal_dest = dmas[index].destination;
         dmas[index].internal_len = 0;
-        if (dmas[index].CNT.timing)
+        /*if (dmas[index].CNT.timing)
         {
             printf("\nDMA%d activated", index);
             printf("\nSource: $%08X", dmas[index].source);
@@ -137,7 +137,7 @@ void GBA_DMA::write_CNT(int index, uint16_t CNT)
             printf("\nLen: %d", dmas[index].length);
             printf("\nCNT: $%04X", dmas[index].CNT.get());
             printf("\nTiming: %d", dmas[index].CNT.timing);
-        }
+        }*/
 
         if (dmas[index].CNT.timing == 0)
         {
@@ -151,4 +151,13 @@ void GBA_DMA::write_len_CNT(int index, uint32_t word)
 {
     write_len(index, word & 0xFFFF);
     write_CNT(index, word >> 16);
+}
+
+void GBA_DMA::HBLANK_request()
+{
+    for (int i = 0; i < 4; i++)
+    {
+        if (dmas[i].CNT.enabled && (dmas[i].CNT.timing & 0x4) != 0)
+            handle_DMA(i);
+    }
 }

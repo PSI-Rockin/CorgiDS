@@ -134,6 +134,11 @@ void NDS_Cart::power_on()
     spi_params = 0;
 }
 
+bool NDS_Cart::game_loaded()
+{
+    return ROM != nullptr;
+}
+
 int NDS_Cart::load_database(string file_name)
 {
     save_database = nullptr;

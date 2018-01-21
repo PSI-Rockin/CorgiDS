@@ -135,8 +135,10 @@ class GPU_2D_Engine
         void handle_BLDCNT_effects();
 
         void gba_draw_txt(int index);
+        void gba_draw_mode2(int index);
         void gba_draw_sprites();
         void gba_draw_pixel(int x, int y, uint16_t color, int source);
+        void gba_handle_BLDCNT();
     public:
         GPU_2D_Engine(GPU* gpu, bool engine_A);
         void draw_backdrop();
@@ -149,6 +151,7 @@ class GPU_2D_Engine
 
         void get_framebuffer(uint32_t* buffer);
         void set_framebuffer(uint32_t* buffer);
+        void clear_buffer();
 
         void VBLANK_start();
 
@@ -157,6 +160,8 @@ class GPU_2D_Engine
 
         uint16_t get_BGHOFS(int index);
         uint16_t get_BGVOFS(int index);
+
+        uint32_t get_BG2X();
 
         uint16_t get_WIN0V();
         uint16_t get_WIN1V();

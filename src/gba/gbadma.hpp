@@ -22,6 +22,8 @@ class GBA_DMA
         void write_len(int index, uint32_t len);
         void write_CNT(int index, uint16_t CNT);
         void write_len_CNT(int index, uint32_t word);
+
+        void HBLANK_request();
 };
 
 #endif // GBADMA_HPP

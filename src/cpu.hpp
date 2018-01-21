@@ -134,6 +134,9 @@ class ARM_CPU
         void add_s32_data(uint32_t address, int cycles);
         void add_n16_data(uint32_t address, int cycles);
         void add_s16_data(uint32_t address, int cycles);
+
+        void update_code_waitstate(uint8_t region, int n32_cycles, int s32_cycles, int n16_cycles, int s16_cycles);
+        void update_data_waitstate(uint8_t region, int n32_cycles, int s32_cycles, int n16_cycles, int s16_cycles);
     
         void add_internal_cycles(int cycles);
         void add_cop_cycles(int cycles);

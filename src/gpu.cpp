@@ -17,6 +17,8 @@ GPU::GPU(Emulator* e) : e(e), eng_A(this, true), eng_B(this, false), eng_3D(e, t
 
 void GPU::power_on()
 {
+    eng_A.clear_buffer();
+    eng_B.clear_buffer();
     eng_3D.power_on();
     cycles = 0;
     frame_complete = false;
@@ -490,6 +492,11 @@ uint16_t GPU::get_BGHOFS_B(int index)
 uint16_t GPU::get_BGVOFS_B(int index)
 {
     return eng_B.get_BGVOFS(index);
+}
+
+uint32_t GPU::get_BG2X_A()
+{
+    return eng_A.get_BG2X();
 }
 
 uint16_t GPU::get_WIN0V_A()
