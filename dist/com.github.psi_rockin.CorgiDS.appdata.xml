@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Copyright 2017 Carles Pastor <cpbadosa@gmail.com> -->
-​<component type="desktop-application">
+<!-- Copyright 2018 Carles Pastor <cpbadosa@gmail.com> -->
+<component type="desktop-application">
 ​  <id>com.github.psi_rockin.CorgiDS</id>
 ​  <metadata_license>FSFAP</metadata_license>
 ​  <project_license>GPL-3.0</project_license>
