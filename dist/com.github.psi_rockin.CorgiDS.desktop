@@ -6,4 +6,4 @@ Exec=corgids
 Icon=com.github.psi_rockin.CorgiDS
 Terminal=false
 Type=Application
-Categories=Emulator;
+Categories=Emulator;Game;
