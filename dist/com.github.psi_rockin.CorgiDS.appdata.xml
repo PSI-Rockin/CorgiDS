@@ -1,41 +1,60 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Copyright 2018 Carles Pastor <cpbadosa@gmail.com> -->
+<!-- Copyright 2017 Carles Pastor <cpbadosa@gmail.com> -->
 <component type="desktop-application">
-​  <id>com.github.psi_rockin.CorgiDS</id>
-​  <metadata_license>FSFAP</metadata_license>
-​  <project_license>GPL-3.0</project_license>
-​  <name>CorgiDS</name>
-​  <summary>NintendoDS emulator</summary>
-​
-​  <description>
-​    <p>
-​      CorgiDS is a DS emulator that seeks to combine accuracy and speed. As of v0.1, it's a long way from either one, but with your support, CorgiDS will accomplish its goals.
+  <id>com.github.psi_rockin.CorgiDS</id>
+  <metadata_license>FSFAP</metadata_license>
+  <project_license>GPL-3.0</project_license>
+  <name>CorgiDS</name>
+  <summary>NintendoDS emulator</summary>
+
+  <keywords>
+    <keyword>corgids</keyword>
+    <keyword>ds</keyword>
+    <keyword>emulator</keyword>
+  </keywords>
+
+  <description>
+    <p>
+      CorgiDS is a DS emulator that seeks to combine accuracy and speed. As of v0.1, it's a long way from either one, but with your support, CorgiDS will accomplish its goals.
     </p>
-​  </description>
-​
-​  <launchable type="desktop-id">com.github.psi_rockin.CorgiDS.desktop</launchable>
-​
-​  <screenshots>
-​    <screenshot type="default">
-​      <caption>Games running</caption>
-​      <image>https://corgids.files.wordpress.com/2017/12/present1.png</image>
-​    </screenshot>
-​    <screenshot>
-​      <image>https://corgids.files.wordpress.com/2017/12/present2.png</image>
-​    </screenshot>
-​  </screenshots>
-​
-​  <url type="homepage">https://github.com/PSI-Rockin/CorgiDS</url>
-​
-​  <provides>
-​    <binary>corgids</binary>
-​  </provides>
-​
-​  <releases>
-​    <release version="0.1" date="2017-12-25">
-​      <description>
-​        <p>First public release</p>
-​      </description>
-​    </release>
-​  </releases>
-​</component>
+  </description>
+
+  <launchable type="desktop-id">com.github.psi_rockin.CorgiDS.desktop</launchable>
+
+  <url type="homepage">https://github.com/PSI-Rockin/CorgiDS</url>
+
+  <provides>
+    <binary>corgids</binary>
+  </provides>
+
+  <content_rating type="oars-1.0">
+    <content_attribute id="violence-cartoon">none</content_attribute>
+    <content_attribute id="violence-fantasy">none</content_attribute>
+    <content_attribute id="violence-realistic">none</content_attribute>
+    <content_attribute id="violence-bloodshed">none</content_attribute>
+    <content_attribute id="violence-sexual">none</content_attribute>
+    <content_attribute id="drugs-alcohol">none</content_attribute>
+    <content_attribute id="drugs-narcotics">none</content_attribute>
+    <content_attribute id="drugs-tobacco">none</content_attribute>
+    <content_attribute id="sex-nudity">none</content_attribute>
+    <content_attribute id="sex-themes">none</content_attribute>
+    <content_attribute id="language-profanity">none</content_attribute>
+    <content_attribute id="language-humor">none</content_attribute>
+    <content_attribute id="language-discrimination">none</content_attribute>
+    <content_attribute id="social-chat">none</content_attribute>
+    <content_attribute id="social-info">none</content_attribute>
+    <content_attribute id="social-audio">none</content_attribute>
+    <content_attribute id="social-location">none</content_attribute>
+    <content_attribute id="social-contacts">none</content_attribute>
+    <content_attribute id="money-purchasing">none</content_attribute>
+    <content_attribute id="money-gambling">none</content_attribute>
+  </content_rating>
+
+  <releases>
+    <release version="0.1" date="2017-12-25">
+      <description>
+        <p>First public release.</p>
+      </description>
+    </release>
+  </releases>
+</component>
