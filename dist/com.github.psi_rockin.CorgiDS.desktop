@@ -3,8 +3,7 @@ Name=CorgiDS
 GenericName=Emulator
 Comment=Dog themed Nintendo DS emulator
 Exec=corgids
-Icon=com.github.psi_rockin.CorgiDS.png
+Icon=com.github.psi_rockin.CorgiDS
 Terminal=false
 Type=Application
 Categories=Emulator;
-
