@@ -1,0 +1,28 @@
+{
+  "app-id": "com.github.psi_rockin.CorgiDS",
+  "runtime": "org.kde.Platform",
+  "runtime-version": "5.9",
+  "sdk": "org.kde.Sdk",
+  "command": "corgids",
+  "finish-args": [
+    "--device=all",
+    "--filesystem=host:ro",
+    "--socket=pulseaudio",
+    "--socket=x11"
+  ],
+  "modules": [
+    {
+      "name": "corgids",
+      "buildsystem": "meson",
+      "config-opts": [
+        "--buildtype=release"
+      ],
+      "sources": [
+        {
+          "type": "git",
+          "url": "https://github.com/cpba/CorgiDS.git"
+        }
+      ]
+    }
+  ]
+}
