@@ -64,6 +64,8 @@ headers = ['src/cartridge.hpp',
           'src/emuthread.hpp',
           'src/bios.hpp']
 
+subdir('dist')
+
 moc_files = qt5.preprocess(ui_files: ui,
                           moc_headers: headers)
 
